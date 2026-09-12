@@ -10,7 +10,7 @@
         user-scalable=no,
         viewport-fit=cover">
 
-  <meta name="theme-color" content="#05030a">
+  <meta name="theme-color" content="#09060f">
 
   <title>FilmApp</title>
 
@@ -19,64 +19,24 @@
 
 <body>
 
-<!-- =====================================================
-     EKRAN STARTOWY
-===================================================== -->
-
-<div id="loadingScreen">
-
-  <div class="loading-glow"></div>
-
-  <div class="loading-logo">
-    FILM<span>APP</span>
-  </div>
-
-  <div class="loading-subtitle">
-    TWÓJ ŚWIAT FILMÓW
-  </div>
-
-  <div class="loading-line">
-    <div id="loadingProgress"></div>
-  </div>
-
-</div>
-
-<!-- =====================================================
-     APLIKACJA
-===================================================== -->
-
 <div id="app">
 
   <header class="topbar">
-
-    <div class="logo">
-      FILM<span>APP</span>
-    </div>
+    <div class="logo">FILM<span>APP</span></div>
 
     <button class="icon-btn" id="profileTopButton">
       👤
     </button>
-
   </header>
-
-  <!-- ===================================================
-       STRONA GŁÓWNA
-  ==================================================== -->
 
   <main id="homePage">
 
     <section class="hero">
-
       <div class="hero-content">
 
-        <span class="badge">
-          ⭐ FILMAPP
-        </span>
+        <span class="badge">⭐ POLECANY</span>
 
-        <h1>
-          Twój świat<br>
-          filmów
-        </h1>
+        <h1>Twój świat<br>filmów</h1>
 
         <p>
           Oglądaj, oceniaj i odkrywaj nowe historie.
@@ -87,21 +47,13 @@
         </button>
 
       </div>
-
     </section>
 
     <section>
 
       <div class="section-title">
-
-        <h2>
-          Kontynuuj oglądanie
-        </h2>
-
-        <button id="continueMore">
-          Więcej
-        </button>
-
+        <h2>Kontynuuj oglądanie</h2>
+        <button id="continueMore">Więcej</button>
       </div>
 
       <div class="movie-row" id="continueRow"></div>
@@ -120,12 +72,16 @@
           🎬 Wszystkie
         </button>
 
-        <button data-category="Akcja">
-          🔥 Akcja
+        <button data-category="Sport / Walki">
+          🥊 Sport / Walki
         </button>
 
         <button data-category="Horror">
           👻 Horror
+        </button>
+
+        <button data-category="Akcja">
+          🔥 Akcja
         </button>
 
         <button data-category="Komedia">
@@ -146,10 +102,6 @@
 
         <button data-category="Romans">
           ❤️ Romans
-        </button>
-
-        <button data-category="Sport / Walki">
-          🥊 Sport / Walki
         </button>
 
       </div>
@@ -178,16 +130,12 @@
 
     <section class="premium-card">
 
-      <span class="badge">
-        💎 PREMIUM
-      </span>
+      <span class="badge">💎 PREMIUM</span>
 
-      <h2>
-        Oglądaj bez ograniczeń
-      </h2>
+      <h2>Oglądaj bez ograniczeń</h2>
 
       <p>
-        Full HD, 4K, brak reklam i dostęp do całej biblioteki.
+        4K, brak reklam i dostęp do całej biblioteki.
       </p>
 
       <button class="primary" id="premiumHomeButton">
@@ -197,10 +145,6 @@
     </section>
 
   </main>
-
-  <!-- ===================================================
-       DOLNA NAWIGACJA
-  ==================================================== -->
 
   <nav class="bottom-nav">
 
@@ -214,7 +158,7 @@
       <small>Szukaj</small>
     </button>
 
-    <button class="nav add hidden" id="navAdd">
+    <button class="nav add" id="navAdd">
       ＋
     </button>
 
@@ -232,23 +176,18 @@
 
 </div>
 
-<!-- =====================================================
-     FILM
-===================================================== -->
+<!-- FILM -->
 
 <div id="movieScreen" class="screen hidden">
 
-  <button class="back" id="movieBack">
-    ‹
-  </button>
+  <button class="back" id="movieBack">‹</button>
 
   <div class="video-player">
 
-    <video
-      id="videoPlayer"
-      controls
-      playsinline
-      preload="metadata">
+    <video id="videoPlayer"
+           controls
+           playsinline
+           preload="metadata">
     </video>
 
   </div>
@@ -257,22 +196,16 @@
 
     <div class="movie-meta">
 
-      <span id="movieQuality">
-        HD
-      </span>
+      <span id="movieQuality">4K</span>
 
       <span id="movieRating">
-        ⭐ —
+        ⭐ 8.7
       </span>
 
       <span id="movieDuration">
-        —
+        1h 48min
       </span>
 
-    </div>
-
-    <div id="movieAccessBadge"
-         class="access-badge">
     </div>
 
     <h1 id="movieTitle">
@@ -316,21 +249,15 @@
 
     </div>
 
-    <div id="commentsSection"></div>
-
   </div>
 
 </div>
 
-<!-- =====================================================
-     LOGOWANIE
-===================================================== -->
+<!-- LOGOWANIE -->
 
 <div id="loginScreen" class="screen hidden">
 
-  <button class="back" id="loginBack">
-    ‹
-  </button>
+  <button class="back" id="loginBack">‹</button>
 
   <div class="auth">
 
@@ -346,9 +273,9 @@
 
     <input
       id="loginEmail"
-      type="text"
-      autocomplete="username"
-      placeholder="Login">
+      type="email"
+      autocomplete="email"
+      placeholder="Adres e-mail">
 
     <input
       id="loginPassword"
@@ -372,15 +299,11 @@
 
 </div>
 
-<!-- =====================================================
-     REJESTRACJA
-===================================================== -->
+<!-- REJESTRACJA -->
 
 <div id="registerScreen" class="screen hidden">
 
-  <button class="back" id="registerBack">
-    ‹
-  </button>
+  <button class="back" id="registerBack">‹</button>
 
   <div class="auth">
 
@@ -401,8 +324,9 @@
 
     <input
       id="registerEmail"
-      type="text"
-      placeholder="Login">
+      type="email"
+      autocomplete="email"
+      placeholder="Adres e-mail">
 
     <input
       id="registerPassword"
@@ -422,15 +346,11 @@
 
 </div>
 
-<!-- =====================================================
-     PROFIL
-===================================================== -->
+<!-- PROFIL -->
 
 <div id="profileScreen" class="screen hidden">
 
-  <button class="back" id="profileBack">
-    ‹
-  </button>
+  <button class="back" id="profileBack">‹</button>
 
   <div class="profile">
 
@@ -482,15 +402,11 @@
 
 </div>
 
-<!-- =====================================================
-     BIBLIOTEKA
-===================================================== -->
+<!-- BIBLIOTEKA -->
 
 <div id="libraryScreen" class="screen hidden">
 
-  <button class="back" id="libraryBack">
-    ‹
-  </button>
+  <button class="back" id="libraryBack">‹</button>
 
   <div class="screen-content">
 
@@ -518,15 +434,11 @@
 
 </div>
 
-<!-- =====================================================
-     PREMIUM
-===================================================== -->
+<!-- PREMIUM -->
 
 <div id="premiumScreen" class="screen hidden">
 
-  <button class="back" id="premiumBack">
-    ‹
-  </button>
+  <button class="back" id="premiumBack">‹</button>
 
   <div class="screen-content">
 
@@ -570,10 +482,9 @@
           19,99 zł / miesiąc
         </strong>
 
-        <button
-          class="primary full"
-          data-buy="Premium"
-          data-days="30">
+        <button class="primary full"
+                data-buy="Premium"
+                data-days="30">
           Kup Premium
         </button>
 
@@ -603,10 +514,9 @@
           29,99 zł / miesiąc
         </strong>
 
-        <button
-          class="primary full"
-          data-buy="Premium 4K"
-          data-days="30">
+        <button class="primary full"
+                data-buy="Premium 4K"
+                data-days="30">
           Kup 4K
         </button>
 
@@ -636,10 +546,9 @@
           199,99 zł
         </strong>
 
-        <button
-          class="primary full"
-          data-buy="Premium na zawsze"
-          data-days="0">
+        <button class="primary full"
+                data-buy="Premium na zawsze"
+                data-days="0">
           Kup na zawsze
         </button>
 
@@ -663,15 +572,11 @@
 
 </div>
 
-<!-- =====================================================
-     SZUKAJ
-===================================================== -->
+<!-- SZUKAJ -->
 
 <div id="searchScreen" class="screen hidden">
 
-  <button class="back" id="searchBack">
-    ‹
-  </button>
+  <button class="back" id="searchBack">‹</button>
 
   <div class="screen-content">
 
@@ -689,171 +594,56 @@
 
 </div>
 
-<!-- =====================================================
-     DODAWANIE FILMU
-===================================================== -->
+<!-- DODAWANIE -->
 
 <div id="addScreen" class="screen hidden">
 
-  <button class="back" id="addBack">
-    ‹
-  </button>
+  <button class="back" id="addBack">‹</button>
 
   <div class="screen-content">
-
-    <span class="badge">
-      👑 ADMIN
-    </span>
 
     <h1>Dodaj film</h1>
 
     <p>
-      Dodaj nowy film do biblioteki FilmApp.
+      Dodaj film do lokalnej wersji biblioteki.
     </p>
-
-    <label class="form-label">
-      Tytuł filmu
-    </label>
 
     <input
       id="addTitle"
       type="text"
-      placeholder="Np. Avengers">
+      placeholder="Tytuł filmu">
 
-    <label class="form-label">
-      Kategoria
-    </label>
+    <textarea
+      id="addDescription"
+      placeholder="Opis filmu"></textarea>
 
-    <select id="addCategory">
-
-      <option value="">
-        Wybierz kategorię
-      </option>
-
-      <option>Akcja</option>
-      <option>Horror</option>
-      <option>Komedia</option>
-      <option>Thriller</option>
-      <option>Sci-Fi</option>
-      <option>Dramat</option>
-      <option>Romans</option>
-      <option>Sport / Walki</option>
-      <option>Inne</option>
-
-    </select>
-
-    <label class="form-label">
-      Dostęp
-    </label>
-
-    <select id="addAccess">
-
-      <option value="Basic">
-        🆓 Basic — każdy
-      </option>
-
-      <option value="Premium">
-        💎 Premium
-      </option>
-
-      <option value="Premium 4K">
-        💎 Premium 4K
-      </option>
-
-    </select>
-
-    <label class="form-label">
-      Jakość
-    </label>
-
-    <select id="addQuality">
-
-      <option value="SD">
-        SD
-      </option>
-
-      <option value="HD" selected>
-        HD
-      </option>
-
-      <option value="Full HD">
-        Full HD
-      </option>
-
-      <option value="4K">
-        4K
-      </option>
-
-    </select>
-
-    <label class="form-label">
-      Plakat / zdjęcie
-    </label>
-
-    <label class="file-button">
-
-      🖼️ Wybierz zdjęcie
-
-      <input
-        id="addPosterFile"
-        type="file"
-        accept="image/*">
-
-    </label>
-
-    <div id="posterPreview"
-         class="poster-preview hidden">
-    </div>
-
-    <label class="form-label">
-      Film
-    </label>
-
-    <label class="file-button">
-
-      🎬 Wybierz film z iPhone'a
-
-      <input
-        id="addVideoFile"
-        type="file"
-        accept="video/*">
-
-    </label>
-
-    <div id="videoFileName"
-         class="file-name">
-    </div>
-
-    <label class="form-label">
-      Czas trwania
-    </label>
+    <input
+      id="addCategory"
+      type="text"
+      placeholder="Kategoria">
 
     <input
       id="addDuration"
       type="text"
-      placeholder="Np. 1h 45min">
+      placeholder="Czas, np. 1h 40min">
 
-    <label class="form-label">
-      Opis filmu
-    </label>
+    <input
+      id="addQuality"
+      type="text"
+      placeholder="Jakość, np. HD lub 4K">
 
-    <textarea
-      id="addDescription"
-      placeholder="Opis filmu..."></textarea>
+    <input
+      id="addVideo"
+      type="url"
+      placeholder="Adres filmu MP4">
 
-    <button
-      class="primary full add-film-button"
-      id="addMovieButton">
-
-      ＋ Dodaj film
-
+    <button class="primary full" id="addMovieButton">
+      Dodaj film
     </button>
 
   </div>
 
 </div>
-
-<!-- TOAST -->
 
 <div id="toast"></div>
 
