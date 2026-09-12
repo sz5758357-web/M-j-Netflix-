@@ -1,3 +1,15 @@
+"use strict";
+/*
+  FILMAPP
+  Wersja demonstracyjna.
+  UWAGA:
+  Konto, płatności i bony są tutaj lokalne.
+  Prawdziwa aplikacja będzie wymagała backendu,
+  bazy danych i operatora płatności.
+*/
+/* =========================
+   DANE FILMÓW
+========================= */
 const movies = [
   {
     id: "fight",
@@ -6,9 +18,11 @@ const movies = [
     rating: 8.7,
     duration: "1h 48min",
     quality: "4K",
-    description: "Zawodnik dostaje ostatnią szansę na powrót na szczyt.",
+    description:
+      "Zawodnik dostaje ostatnią szansę na powrót na szczyt.",
     poster: "poster1",
-    video: "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4"
+    video:
+      "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4"
   },
   {
     id: "horror",
@@ -17,9 +31,11 @@ const movies = [
     rating: 8.1,
     duration: "1h 36min",
     quality: "HD",
-    description: "Grupa przyjaciół odkrywa miejsce, z którego nie da się łatwo wydostać.",
+    description:
+      "Grupa przyjaciół odkrywa miejsce, z którego nie da się łatwo wydostać.",
     poster: "poster2",
-    video: "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4"
+    video:
+      "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4"
   },
   {
     id: "action",
@@ -28,9 +44,11 @@ const movies = [
     rating: 9.0,
     duration: "2h 04min",
     quality: "4K",
-    description: "Agent otrzymuje zadanie, które zmieni całe jego życie.",
+    description:
+      "Agent otrzymuje zadanie, które zmieni całe jego życie.",
     poster: "poster3",
-    video: "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4"
+    video:
+      "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4"
   },
   {
     id: "space",
@@ -39,9 +57,11 @@ const movies = [
     rating: 8.9,
     duration: "2h 12min",
     quality: "4K",
-    description: "Załoga statku kosmicznego odkrywa coś, czego nie powinno być w kosmosie.",
+    description:
+      "Załoga statku kosmicznego odkrywa coś, czego nie powinno być w kosmosie.",
     poster: "poster4",
-    video: "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4"
+    video:
+      "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4"
   },
   {
     id: "shadow",
@@ -50,9 +70,11 @@ const movies = [
     rating: 8.5,
     duration: "1h 55min",
     quality: "4K",
-    description: "Tajemnicze wydarzenia prowadzą detektywa do ukrytej prawdy.",
+    description:
+      "Tajemnicze wydarzenia prowadzą detektywa do ukrytej prawdy.",
     poster: "poster5",
-    video: "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4"
+    video:
+      "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4"
   },
   {
     id: "comedy",
@@ -61,192 +83,218 @@ const movies = [
     rating: 7.9,
     duration: "1h 42min",
     quality: "HD",
-    description: "Zwykła podróż zamienia się w serię kompletnie absurdalnych wydarzeń.",
+    description:
+      "Zwykła podróż zamienia się w serię absurdalnych wydarzeń.",
     poster: "poster6",
-    video: "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4"
+    video:
+      "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4"
   }
 ];
-
+/* =========================
+   STAN
+========================= */
+let state;
+try {
+  state = JSON.parse(
+    localStorage.getItem("filmapp_state")
+  );
+} catch {
+  state = null;
+}
+if (!state) {
+  state = {
+    user: null,
+    favorites: [],
+    history: [],
+    ratings: {},
+    customMovies: [],
+    premium: {
+      plan: "Free",
+      expires: null
+    }
+  };
+}
 let currentMovie = null;
-
-let state = JSON.parse(localStorage.getItem("filmapp_state")) || {
-  user: null,
-  favorites: [],
-  history: [],
-  ratings: {},
-  customMovies: [],
-  premium: {
-    plan: "Free",
-    expires: null
-  }
-};
-
+/* =========================
+   ZAPIS
+========================= */
 function saveState() {
-  localStorage.setItem("filmapp_state", JSON.stringify(state));
+  localStorage.setItem(
+    "filmapp_state",
+    JSON.stringify(state)
+  );
 }
-
+/* =========================
+   POMOCNICZE
+========================= */
 function allMovies() {
-  return [...movies, ...state.customMovies];
+  return [
+    ...movies,
+    ...(Array.isArray(state.customMovies)
+      ? state.customMovies
+      : [])
+  ];
 }
-
+function $(id) {
+  return document.getElementById(id);
+}
 function toast(message) {
-  const element = document.getElementById("toast");
-
+  const element = $("toast");
   element.textContent = message;
   element.classList.add("show");
-
-  setTimeout(() => {
+  clearTimeout(window.toastTimer);
+  window.toastTimer = setTimeout(() => {
     element.classList.remove("show");
   }, 2500);
 }
-
+/* =========================
+   EKRANY
+========================= */
 function showScreen(id) {
-  document.querySelectorAll(".screen").forEach(screen => {
-    screen.classList.add("hidden");
-  });
-
-  document.getElementById(id).classList.remove("hidden");
+  document
+    .querySelectorAll(".screen")
+    .forEach(screen => {
+      screen.classList.add("hidden");
+    });
+  const screen = $(id);
+  if (screen) {
+    screen.classList.remove("hidden");
+    screen.scrollTop = 0;
+  }
 }
-
 function closeScreen() {
-  document.querySelectorAll(".screen").forEach(screen => {
-    screen.classList.add("hidden");
-  });
-
-  const video = document.getElementById("videoPlayer");
-
+  document
+    .querySelectorAll(".screen")
+    .forEach(screen => {
+      screen.classList.add("hidden");
+    });
+  const video = $("videoPlayer");
   if (video) {
     video.pause();
   }
 }
-
 function goHome() {
   closeScreen();
-
   window.scrollTo({
     top: 0,
     behavior: "smooth"
   });
 }
-
-
-/* FILMY */
-
+/* =========================
+   KARTY FILMÓW
+========================= */
 function createMovieCard(movie) {
   return `
-    <article class="movie-card"
-             onclick="openMovie('${movie.id}')">
-
+    <article
+      class="movie-card"
+      data-movie-id="${movie.id}">
       <div class="poster ${movie.poster}">
-        <span class="quality">${movie.quality}</span>
-        <span class="poster-title">${movie.title}</span>
-        <span class="play">▶</span>
+        <span class="quality">
+          ${movie.quality}
+        </span>
+        <span class="poster-title">
+          ${escapeHTML(movie.title)}
+        </span>
+        <span class="play">
+          ▶
+        </span>
       </div>
-
-      <h3>${movie.title}</h3>
-
+      <h3>
+        ${escapeHTML(movie.title)}
+      </h3>
       <p>
         ⭐ ${movie.rating} · ${movie.duration}
       </p>
-
     </article>
   `;
 }
-
-function renderMovies() {
-  const list = allMovies();
-
-  const movieRow = document.getElementById("movieRow");
-  const topRow = document.getElementById("topRow");
-  const continueRow = document.getElementById("continueRow");
-
-  movieRow.innerHTML = list
-    .slice(0, 6)
+function renderMovies(list = allMovies()) {
+  $("movieRow").innerHTML = list
+    .slice(0, 10)
     .map(createMovieCard)
     .join("");
-
-  topRow.innerHTML = [...list]
+  $("topRow").innerHTML = [...allMovies()]
     .sort((a, b) => b.rating - a.rating)
-    .slice(0, 6)
+    .slice(0, 10)
     .map(createMovieCard)
     .join("");
-
-  const continueMovies = list.filter(movie =>
-    state.history.includes(movie.id)
-  );
-
+  const continueMovies = state.history
+    .map(id =>
+      allMovies().find(movie => movie.id === id)
+    )
+    .filter(Boolean);
   if (continueMovies.length) {
-    continueRow.innerHTML = continueMovies
-      .map(createMovieCard)
-      .join("");
+    $("continueRow").innerHTML =
+      continueMovies
+        .map(createMovieCard)
+        .join("");
   } else {
-    continueRow.innerHTML = list
-      .slice(0, 3)
-      .map(createMovieCard)
-      .join("");
+    $("continueRow").innerHTML =
+      allMovies()
+        .slice(0, 5)
+        .map(createMovieCard)
+        .join("");
   }
 }
-
+/* =========================
+   OTWIERANIE FILMU
+========================= */
 function openMovie(id) {
-  currentMovie = allMovies().find(movie => movie.id === id);
-
-  if (!currentMovie) {
+  const movie = allMovies()
+    .find(item => item.id === id);
+  if (!movie) {
     toast("Nie znaleziono filmu.");
     return;
   }
-
-  document.getElementById("movieTitle").textContent =
-    currentMovie.title;
-
-  document.getElementById("movieDescription").textContent =
-    currentMovie.description;
-
-  document.getElementById("movieCategory").textContent =
-    currentMovie.category;
-
-  document.getElementById("movieQuality").textContent =
-    currentMovie.quality;
-
-  document.getElementById("movieRating").textContent =
-    `⭐ ${currentMovie.rating}`;
-
-  document.getElementById("movieDuration").textContent =
-    currentMovie.duration;
-
-  const video = document.getElementById("videoPlayer");
-
-  video.src = currentMovie.video || "";
-
-  if (!state.history.includes(currentMovie.id)) {
-    state.history.unshift(currentMovie.id);
+  currentMovie = movie;
+  $("movieTitle").textContent =
+    movie.title;
+  $("movieDescription").textContent =
+    movie.description;
+  $("movieCategory").textContent =
+    movie.category;
+  $("movieQuality").textContent =
+    movie.quality;
+  $("movieRating").textContent =
+    `⭐ ${movie.rating}`;
+  $("movieDuration").textContent =
+    movie.duration;
+  const video = $("videoPlayer");
+  video.pause();
+  video.src = movie.video || "";
+  video.load();
+  if (!state.history.includes(movie.id)) {
+    state.history.unshift(movie.id);
+    if (state.history.length > 30) {
+      state.history.pop();
+    }
     saveState();
-    renderMovies();
   }
-
+  updateFavoriteButton();
   showScreen("movieScreen");
 }
-
 function playMovie() {
-  const video = document.getElementById("videoPlayer");
-
-  if (!video.src) {
-    toast("Ten film nie ma jeszcze pliku wideo.");
+  if (!currentMovie) {
     return;
   }
-
+  const video = $("videoPlayer");
+  if (!video.src) {
+    toast("Ten film nie ma jeszcze filmu wideo.");
+    return;
+  }
   video.play().catch(() => {
-    toast("Kliknij przycisk odtwarzania filmu.");
+    toast("Nie udało się rozpocząć odtwarzania.");
   });
 }
-
-
-/* BIBLIOTEKA */
-
+/* =========================
+   BIBLIOTEKA
+========================= */
 function toggleFavorite() {
-  if (!currentMovie) return;
-
-  const index = state.favorites.indexOf(currentMovie.id);
-
+  if (!currentMovie) {
+    return;
+  }
+  const index =
+    state.favorites.indexOf(currentMovie.id);
   if (index === -1) {
     state.favorites.push(currentMovie.id);
     toast("Dodano do biblioteki ❤️");
@@ -254,321 +302,325 @@ function toggleFavorite() {
     state.favorites.splice(index, 1);
     toast("Usunięto z biblioteki.");
   }
-
   saveState();
+  updateFavoriteButton();
 }
-
+function updateFavoriteButton() {
+  if (!currentMovie) {
+    return;
+  }
+  const exists =
+    state.favorites.includes(currentMovie.id);
+  $("favoriteButton").textContent =
+    exists
+      ? "♥ W bibliotece"
+      : "♡ Biblioteka";
+}
 function openLibrary() {
   showScreen("libraryScreen");
   showLibrary("favorites");
 }
-
 function showLibrary(type) {
-  const container = document.getElementById("libraryMovies");
-
   let ids = [];
-
   if (type === "favorites") {
     ids = state.favorites;
   }
-
   if (type === "history") {
     ids = state.history;
   }
-
   if (type === "continue") {
     ids = state.history;
   }
-
   const selected = ids
-    .map(id => allMovies().find(movie => movie.id === id))
+    .map(id =>
+      allMovies().find(movie => movie.id === id)
+    )
     .filter(Boolean);
-
   if (!selected.length) {
-    container.innerHTML = `
+    $("libraryMovies").innerHTML = `
       <div class="empty-library">
         <div>♡</div>
         <h2>Biblioteka jest pusta</h2>
-        <p>Dodane filmy pojawią się tutaj.</p>
+        <p>
+          Filmy, które dodasz, pojawią się tutaj.
+        </p>
       </div>
     `;
-
     return;
   }
-
-  container.innerHTML = selected
-    .map(movie => `
-      <div class="library-item"
-           onclick="openMovie('${movie.id}')">
-
-        <div class="mini-poster ${movie.poster}"></div>
-
-        <div>
-          <h3>${movie.title}</h3>
-          <p>${movie.category}</p>
-          <p>⭐ ${movie.rating} · ${movie.duration}</p>
+  $("libraryMovies").innerHTML =
+    selected
+      .map(movie => `
+        <div
+          class="library-item"
+          data-movie-id="${movie.id}">
+          <div class="mini-poster ${movie.poster}"></div>
+          <div>
+            <h3>
+              ${escapeHTML(movie.title)}
+            </h3>
+            <p>
+              ${escapeHTML(movie.category)}
+            </p>
+            <p>
+              ⭐ ${movie.rating} · ${movie.duration}
+            </p>
+          </div>
         </div>
-
-      </div>
-    `)
-    .join("");
+      `)
+      .join("");
 }
-
-
-/* OCENY */
-
+/* =========================
+   OCENY
+========================= */
 function rateMovie(number) {
-  if (!currentMovie) return;
-
-  state.ratings[currentMovie.id] = number;
-
+  if (!currentMovie) {
+    return;
+  }
+  state.ratings[currentMovie.id] =
+    number;
   saveState();
-
-  toast(`Ocena ${number}/10 została zapisana ⭐`);
+  toast(
+    `Twoja ocena: ${number}/10 ⭐`
+  );
 }
-
-
-/* KATEGORIE */
-
+/* =========================
+   KATEGORIE
+========================= */
 function filterMovies(category) {
   if (category === "Wszystkie") {
     renderMovies();
     goHome();
     return;
   }
-
-  const filtered = allMovies()
-    .filter(movie => movie.category === category);
-
-  const movieRow = document.getElementById("movieRow");
-
-  movieRow.innerHTML = filtered.length
-    ? filtered.map(createMovieCard).join("")
-    : `<p>Brak filmów w tej kategorii.</p>`;
-
+  const filtered =
+    allMovies()
+      .filter(movie =>
+        movie.category === category
+      );
+  $("movieRow").innerHTML =
+    filtered.length
+      ? filtered.map(createMovieCard).join("")
+      : "<p>Brak filmów w tej kategorii.</p>";
   window.scrollTo({
     top: 0,
     behavior: "smooth"
   });
 }
-
-
-/* SZUKANIE */
-
+/* =========================
+   SZUKANIE
+========================= */
 function openSearch() {
   showScreen("searchScreen");
-
   setTimeout(() => {
-    document.getElementById("searchInput").focus();
+    $("searchInput").focus();
   }, 300);
 }
-
 function searchMovies() {
-  const query = document
-    .getElementById("searchInput")
-    .value
-    .toLowerCase()
-    .trim();
-
-  const results = document.getElementById("searchResults");
-
+  const query =
+    $("searchInput")
+      .value
+      .toLowerCase()
+      .trim();
   if (!query) {
-    results.innerHTML = "";
+    $("searchResults").innerHTML = "";
     return;
   }
-
-  const found = allMovies()
-    .filter(movie =>
-      movie.title.toLowerCase().includes(query) ||
-      movie.category.toLowerCase().includes(query)
-    );
-
-  if (!found.length) {
-    results.innerHTML = `
+  const results =
+    allMovies()
+      .filter(movie =>
+        movie.title
+          .toLowerCase()
+          .includes(query) ||
+        movie.category
+          .toLowerCase()
+          .includes(query)
+      );
+  if (!results.length) {
+    $("searchResults").innerHTML = `
       <div class="result">
         Nie znaleziono filmu.
       </div>
     `;
-
     return;
   }
-
-  results.innerHTML = found.map(movie => `
-    <div class="result"
-         onclick="openMovie('${movie.id}')">
-
-      <strong>${movie.title}</strong>
-
-      <p>
-        ${movie.category} · ⭐ ${movie.rating} · ${movie.duration}
-      </p>
-
-    </div>
-  `).join("");
+  $("searchResults").innerHTML =
+    results
+      .map(movie => `
+        <div
+          class="result"
+          data-movie-id="${movie.id}">
+          <strong>
+            ${escapeHTML(movie.title)}
+          </strong>
+          <p>
+            ${escapeHTML(movie.category)}
+            · ⭐ ${movie.rating}
+            · ${movie.duration}
+          </p>
+        </div>
+      `)
+      .join("");
 }
-
-
-/* KONTO */
-
+/* =========================
+   PROFIL
+========================= */
 function openProfile() {
   updateProfile();
   showScreen("profileScreen");
 }
-
+function updateProfile() {
+  if (state.user) {
+    $("profileName").textContent =
+      state.user.name;
+    $("profileEmail").textContent =
+      state.user.email;
+    $("profileLoggedOut")
+      .classList.add("hidden");
+    $("profileLoggedIn")
+      .classList.remove("hidden");
+  } else {
+    $("profileName").textContent =
+      "Gość";
+    $("profileEmail").textContent =
+      "Nie jesteś zalogowany";
+    $("profileLoggedOut")
+      .classList.remove("hidden");
+    $("profileLoggedIn")
+      .classList.add("hidden");
+  }
+}
 function openLogin() {
   showScreen("loginScreen");
 }
-
-function register() {
+function openRegister() {
   showScreen("registerScreen");
 }
-
 function createAccount() {
-  const name = document.getElementById("registerName").value.trim();
-  const email = document.getElementById("registerEmail").value.trim();
-  const password = document.getElementById("registerPassword").value;
-
+  const name =
+    $("registerName").value.trim();
+  const email =
+    $("registerEmail").value.trim();
+  const password =
+    $("registerPassword").value;
   if (!name || !email || !password) {
     toast("Wypełnij wszystkie pola.");
     return;
   }
-
-  if (password.length < 8) {
-    toast("Hasło musi mieć minimum 8 znaków.");
+  if (!email.includes("@")) {
+    toast("Podaj prawidłowy e-mail.");
     return;
   }
-
+  if (password.length < 8) {
+    toast(
+      "Hasło musi mieć minimum 8 znaków."
+    );
+    return;
+  }
   state.user = {
     name,
     email
   };
-
   saveState();
-
-  toast("Konto utworzone 🎉");
-
+  $("registerPassword").value = "";
+  toast("Konto zostało utworzone 🎉");
   setTimeout(() => {
     openProfile();
   }, 500);
 }
-
 function login() {
-  const email = document.getElementById("loginEmail").value.trim();
-  const password = document.getElementById("loginPassword").value;
-
+  const email =
+    $("loginEmail").value.trim();
+  const password =
+    $("loginPassword").value;
   if (!email || !password) {
-    toast("Wpisz e-mail i hasło.");
+    toast(
+      "Wpisz e-mail i hasło."
+    );
     return;
   }
-
   state.user = {
     name: email.split("@")[0],
     email
   };
-
   saveState();
-
-  toast("Zalogowano pomyślnie 👋");
-
+  toast("Zalogowano 👋");
   setTimeout(() => {
     openProfile();
   }, 500);
 }
-
 function forgotPassword() {
-  const email = prompt("Podaj adres e-mail:");
-
-  if (!email) return;
-
-  toast("Jeżeli konto istnieje, wysłaliśmy link resetujący.");
+  const email =
+    prompt("Podaj adres e-mail:");
+  if (!email) {
+    return;
+  }
+  toast(
+    "Link resetujący został wysłany na e-mail."
+  );
 }
-
 function logout() {
   state.user = null;
   saveState();
-
+  updateProfile();
   toast("Wylogowano.");
-
-  setTimeout(() => {
-    closeScreen();
-  }, 500);
+  setTimeout(closeScreen, 500);
 }
-
-function updateProfile() {
-  const loggedOut = document.getElementById("profileLoggedOut");
-  const loggedIn = document.getElementById("profileLoggedIn");
-
-  if (state.user) {
-    document.getElementById("profileName").textContent =
-      state.user.name;
-
-    document.getElementById("profileEmail").textContent =
-      state.user.email;
-
-    loggedOut.classList.add("hidden");
-    loggedIn.classList.remove("hidden");
-  } else {
-    document.getElementById("profileName").textContent =
-      "Gość";
-
-    document.getElementById("profileEmail").textContent =
-      "Nie jesteś zalogowany";
-
-    loggedOut.classList.remove("hidden");
-    loggedIn.classList.add("hidden");
-  }
-}
-
-
-/* PREMIUM */
-
+/* =========================
+   PREMIUM
+========================= */
 function openPremium() {
   updatePremium();
   showScreen("premiumScreen");
 }
-
 function updatePremium() {
-  const element = document.getElementById("currentPlan");
-
+  const element =
+    $("currentPlan");
   if (state.premium.plan === "Free") {
-    element.innerHTML = "";
-    return;
-  }
-
-  if (state.premium.expires === null) {
     element.innerHTML = `
       <div class="plan-status">
-        💎 <strong>${state.premium.plan}</strong><br>
-        Aktywny bezterminowo
+        Aktualny plan: <strong>Free</strong>
       </div>
     `;
     return;
   }
-
-  const date = new Date(state.premium.expires);
-
+  if (state.premium.expires === null) {
+    element.innerHTML = `
+      <div class="plan-status">
+        💎 <strong>
+        ${escapeHTML(state.premium.plan)}
+        </strong><br>
+        Aktywny bezterminowo.
+      </div>
+    `;
+    return;
+  }
+  const date =
+    new Date(state.premium.expires);
   element.innerHTML = `
     <div class="plan-status">
-      💎 <strong>${state.premium.plan}</strong><br>
-      Aktywny do: ${date.toLocaleDateString("pl-PL")}
+      💎 <strong>
+      ${escapeHTML(state.premium.plan)}
+      </strong><br>
+      Aktywny do:
+      ${date.toLocaleDateString("pl-PL")}
     </div>
   `;
 }
-
 function buyPlan(plan, days) {
   if (!state.user) {
-    toast("Najpierw utwórz konto lub zaloguj się.");
+    toast(
+      "Najpierw zaloguj się."
+    );
     setTimeout(openLogin, 700);
     return;
   }
-
   /*
-    DEMO:
-    Ten przycisk aktywuje pakiet lokalnie.
-    Prawdziwa płatność wymaga podłączenia
-    operatora płatności i bezpiecznego backendu.
+    W tej wersji jest tryb DEMO.
+    Kliknięcie aktywuje pakiet bez pobierania pieniędzy.
+    Prawdziwe płatności podłączymy później
+    przez bezpieczny backend.
   */
-
   if (days === 0) {
     state.premium = {
       plan,
@@ -577,88 +629,110 @@ function buyPlan(plan, days) {
   } else {
     state.premium = {
       plan,
-      expires: Date.now() + days * 24 * 60 * 60 * 1000
+      expires:
+        Date.now() +
+        days * 24 * 60 * 60 * 1000
     };
   }
-
   saveState();
   updatePremium();
-
-  toast(`${plan} został aktywowany 💎`);
+  toast(
+    `${plan} aktywny 💎`
+  );
 }
-
-
-/* BONY */
-
+/* =========================
+   BONY
+========================= */
 const voucherCodes = {
   "FILM-PREMIUM-2026": {
     plan: "Premium",
     days: 30
   },
-
   "FILM-4K-2026": {
     plan: "Premium 4K",
     days: 30
   },
-
   "FILM-LIFE-2026": {
     plan: "Premium na zawsze",
     days: 0
   }
 };
-
 function activateVoucher(type) {
+  if (!state.user) {
+    toast(
+      "Najpierw zaloguj się."
+    );
+    setTimeout(openLogin, 700);
+    return;
+  }
   let input;
-
   if (type === "premium") {
-    input = document.getElementById("premiumCode");
+    input = $("premiumCode");
   }
-
   if (type === "4k") {
-    input = document.getElementById("premium4kCode");
+    input = $("premium4kCode");
   }
-
   if (type === "lifetime") {
-    input = document.getElementById("lifetimeCode");
+    input = $("lifetimeCode");
   }
-
-  const code = input.value.trim().toUpperCase();
-
+  const code =
+    input.value
+      .trim()
+      .toUpperCase();
   if (!code) {
     toast("Wpisz kod bonu.");
     return;
   }
-
-  if (!state.user) {
-    toast("Najpierw zaloguj się.");
-    return;
-  }
-
-  const voucher = voucherCodes[code];
-
+  const voucher =
+    voucherCodes[code];
   if (!voucher) {
     toast("Nieprawidłowy kod.");
     return;
   }
-
-  const used = JSON.parse(
-    localStorage.getItem("filmapp_used_vouchers") || "[]"
-  );
-
+  let used = [];
+  try {
+    used =
+      JSON.parse(
+        localStorage.getItem(
+          "filmapp_used_vouchers"
+        ) || "[]"
+      );
+  } catch {
+    used = [];
+  }
   if (used.includes(code)) {
-    toast("Ten bon został już wykorzystany.");
+    toast(
+      "Ten bon został już wykorzystany."
+    );
     return;
   }
-
   if (
-    (type === "premium" && voucher.plan !== "Premium") ||
-    (type === "4k" && voucher.plan !== "Premium 4K") ||
-    (type === "lifetime" && voucher.plan !== "Premium na zawsze")
+    type === "premium" &&
+    voucher.plan !== "Premium"
   ) {
-    toast("Ten kod nie pasuje do tego pakietu.");
+    toast(
+      "Ten kod jest przeznaczony dla innego pakietu."
+    );
     return;
   }
-
+  if (
+    type === "4k" &&
+    voucher.plan !== "Premium 4K"
+  ) {
+    toast(
+      "Ten kod jest przeznaczony dla innego pakietu."
+    );
+    return;
+  }
+  if (
+    type === "lifetime" &&
+    voucher.plan !== "Premium na zawsze"
+  ) {
+    toast(
+      "Ten kod jest przeznaczony dla innego pakietu."
+    );
+    return;
+  }
   if (voucher.days === 0) {
     state.premium = {
       plan: voucher.plan,
@@ -667,58 +741,68 @@ function activateVoucher(type) {
   } else {
     state.premium = {
       plan: voucher.plan,
-      expires: Date.now() +
+      expires:
+        Date.now() +
         voucher.days * 24 * 60 * 60 * 1000
     };
   }
-
   used.push(code);
-
   localStorage.setItem(
     "filmapp_used_vouchers",
     JSON.stringify(used)
   );
-
   saveState();
-
   input.value = "";
-
   updatePremium();
-
-  toast("Bon aktywowany 🎉");
+  toast(
+    "Bon został aktywowany 🎉"
+  );
 }
-
-
-/* DODAWANIE FILMÓW */
-
+/* =========================
+   DODAWANIE FILMU
+========================= */
 function openAdd() {
-  showScreen("addScreen");
-}
-
-function addMovie() {
-  const title = document.getElementById("addTitle").value.trim();
-  const description =
-    document.getElementById("addDescription").value.trim();
-
-  const category =
-    document.getElementById("addCategory").value.trim() || "Inne";
-
-  const duration =
-    document.getElementById("addDuration").value.trim() || "—";
-
-  const quality =
-    document.getElementById("addQuality").value.trim() || "HD";
-
-  const video =
-    document.getElementById("addVideo").value.trim();
-
-  if (!title || !description) {
-    toast("Podaj tytuł i opis filmu.");
+  if (!state.user) {
+    toast(
+      "Zaloguj się, żeby dodawać filmy."
+    );
+    setTimeout(openLogin, 700);
     return;
   }
-
+  showScreen("addScreen");
+}
+function addMovie() {
+  if (!state.user) {
+    toast(
+      "Musisz być zalogowany."
+    );
+    return;
+  }
+  const title =
+    $("addTitle").value.trim();
+  const description =
+    $("addDescription").value.trim();
+  const category =
+    $("addCategory").value.trim() ||
+    "Inne";
+  const duration =
+    $("addDuration").value.trim() ||
+    "—";
+  const quality =
+    $("addQuality").value.trim() ||
+    "HD";
+  const video =
+    $("addVideo").value.trim();
+  if (!title || !description) {
+    toast(
+      "Podaj tytuł i opis."
+    );
+    return;
+  }
   const newMovie = {
-    id: "custom-" + Date.now(),
+    id:
+      "custom-" +
+      Date.now(),
     title,
     category,
     rating: 0,
@@ -728,56 +812,301 @@ function addMovie() {
     poster: "poster4",
     video
   };
-
-  state.customMovies.push(newMovie);
-
+  state.customMovies.push(
+    newMovie
+  );
   saveState();
   renderMovies();
-
-  toast("Film został dodany 🎬");
-
-  setTimeout(() => {
-    closeScreen();
-  }, 500);
+  toast(
+    "Film został dodany 🎬"
+  );
+  $("addTitle").value = "";
+  $("addDescription").value = "";
+  $("addCategory").value = "";
+  $("addDuration").value = "";
+  $("addQuality").value = "";
+  $("addVideo").value = "";
+  setTimeout(
+    closeScreen,
+    600
+  );
 }
-
-
-/* OCHRONA PRZED PODWÓJNYM TAPNIĘCIEM / ZOOMEM */
-
+/* =========================
+   ESCAPE HTML
+========================= */
+function escapeHTML(value) {
+  return String(value)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+/* =========================
+   EVENTY
+========================= */
+function setupEvents() {
+  $("profileTopButton")
+    .addEventListener("click", openProfile);
+  $("heroWatch")
+    .addEventListener(
+      "click",
+      () => openMovie("action")
+    );
+  $("continueMore")
+    .addEventListener(
+      "click",
+      openLibrary
+    );
+  $("premiumHomeButton")
+    .addEventListener(
+      "click",
+      openPremium
+    );
+  $("navHome")
+    .addEventListener("click", goHome);
+  $("navSearch")
+    .addEventListener(
+      "click",
+      openSearch
+    );
+  $("navAdd")
+    .addEventListener(
+      "click",
+      openAdd
+    );
+  $("navLibrary")
+    .addEventListener(
+      "click",
+      openLibrary
+    );
+  $("navProfile")
+    .addEventListener(
+      "click",
+      openProfile
+    );
+  $("movieBack")
+    .addEventListener(
+      "click",
+      closeScreen
+    );
+  $("loginBack")
+    .addEventListener(
+      "click",
+      closeScreen
+    );
+  $("registerBack")
+    .addEventListener(
+      "click",
+      closeScreen
+    );
+  $("profileBack")
+    .addEventListener(
+      "click",
+      closeScreen
+    );
+  $("libraryBack")
+    .addEventListener(
+      "click",
+      closeScreen
+    );
+  $("premiumBack")
+    .addEventListener(
+      "click",
+      closeScreen
+    );
+  $("searchBack")
+    .addEventListener(
+      "click",
+      closeScreen
+    );
+  $("addBack")
+    .addEventListener(
+      "click",
+      closeScreen
+    );
+  $("playMovieButton")
+    .addEventListener(
+      "click",
+      playMovie
+    );
+  $("favoriteButton")
+    .addEventListener(
+      "click",
+      toggleFavorite
+    );
+  $("loginButton")
+    .addEventListener(
+      "click",
+      login
+    );
+  $("registerButton")
+    .addEventListener(
+      "click",
+      openRegister
+    );
+  $("forgotButton")
+    .addEventListener(
+      "click",
+      forgotPassword
+    );
+  $("createAccountButton")
+    .addEventListener(
+      "click",
+      createAccount
+    );
+  $("goLoginButton")
+    .addEventListener(
+      "click",
+      openLogin
+    );
+  $("profileLogin")
+    .addEventListener(
+      "click",
+      openLogin
+    );
+  $("profileLibrary")
+    .addEventListener(
+      "click",
+      openLibrary
+    );
+  $("profilePremium")
+    .addEventListener(
+      "click",
+      openPremium
+    );
+  $("profileReset")
+    .addEventListener(
+      "click",
+      forgotPassword
+    );
+  $("profileLogout")
+    .addEventListener(
+      "click",
+      logout
+    );
+  document
+    .querySelectorAll("[data-category]")
+    .forEach(button => {
+      button.addEventListener(
+        "click",
+        () =>
+          filterMovies(
+            button.dataset.category
+          )
+      );
+    });
+  document
+    .querySelectorAll("[data-rating]")
+    .forEach(button => {
+      button.addEventListener(
+        "click",
+        () =>
+          rateMovie(
+            Number(button.dataset.rating)
+          )
+      );
+    });
+  document
+    .querySelectorAll("[data-library]")
+    .forEach(button => {
+      button.addEventListener(
+        "click",
+        () =>
+          showLibrary(
+            button.dataset.library
+          )
+      );
+    });
+  document
+    .querySelectorAll("[data-buy]")
+    .forEach(button => {
+      button.addEventListener(
+        "click",
+        () =>
+          buyPlan(
+            button.dataset.buy,
+            Number(button.dataset.days)
+          )
+      );
+    });
+  document
+    .querySelectorAll("[data-voucher]")
+    .forEach(button => {
+      button.addEventListener(
+        "click",
+        () =>
+          activateVoucher(
+            button.dataset.voucher
+          )
+      );
+    });
+  $("searchInput")
+    .addEventListener(
+      "input",
+      searchMovies
+    );
+  $("addMovieButton")
+    .addEventListener(
+      "click",
+      addMovie
+    );
+  document.addEventListener(
+    "click",
+    event => {
+      const movieCard =
+        event.target.closest(
+          "[data-movie-id]"
+        );
+      if (!movieCard) {
+        return;
+      }
+      openMovie(
+        movieCard.dataset.movieId
+      );
+    }
+  );
+}
+/* =========================
+   OCHRONA PRZED ZOOM
+========================= */
 document.addEventListener(
   "dblclick",
-  function(event) {
+  event => {
     event.preventDefault();
   },
   { passive: false }
 );
-
 document.addEventListener(
   "gesturestart",
-  function(event) {
+  event => {
     event.preventDefault();
   },
   { passive: false }
 );
-
 document.addEventListener(
   "gesturechange",
-  function(event) {
+  event => {
     event.preventDefault();
   },
   { passive: false }
 );
-
 document.addEventListener(
   "gestureend",
-  function(event) {
+  event => {
     event.preventDefault();
   },
   { passive: false }
 );
-
-
-/* START */
-
-renderMovies();
-updateProfile();
+/* =========================
+   START
+========================= */
+document.addEventListener(
+  "DOMContentLoaded",
+  () => {
+    setupEvents();
+    renderMovies();
+    updateProfile();
+    updatePremium();
+  }
+);
