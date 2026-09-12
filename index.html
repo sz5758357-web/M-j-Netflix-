@@ -2,652 +2,376 @@
 <html lang="pl">
 <head>
   <meta charset="UTF-8">
-
-  <meta name="viewport"
-        content="width=device-width,
-        initial-scale=1,
-        maximum-scale=1,
-        user-scalable=no,
-        viewport-fit=cover">
-
-  <meta name="theme-color" content="#09060f">
-
-  <title>FilmApp</title>
-
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Cineverse – Oglądaj każdy film</title>
   <link rel="stylesheet" href="style.css">
 </head>
-
 <body>
+  <div class="phone">
 
-<div id="app">
-
-  <header class="topbar">
-    <div class="logo">FILM<span>APP</span></div>
-
-    <button class="icon-btn" id="profileTopButton">
-      👤
-    </button>
-  </header>
-
-  <main id="homePage">
-
-    <section class="hero">
-      <div class="hero-content">
-
-        <span class="badge">⭐ POLECANY</span>
-
-        <h1>Twój świat<br>filmów</h1>
-
-        <p>
-          Oglądaj, oceniaj i odkrywaj nowe historie.
-        </p>
-
-        <button class="primary" id="heroWatch">
-          ▶ Oglądaj teraz
-        </button>
-
+    <!-- ONBOARDING -->
+    <div id="onboarding" class="page active">
+      <div class="status-bar">
+        <span>12:04</span>
+        <div class="icons">●●● &nbsp; Wi-Fi &nbsp; 100%</div>
       </div>
-    </section>
-
-    <section>
-
-      <div class="section-title">
-        <h2>Kontynuuj oglądanie</h2>
-        <button id="continueMore">Więcej</button>
+      <div class="onboarding">
+        <div class="poster-grid">
+          <img src="https://image.tmdb.org/t/p/w500/8Vt6mWEReuy4Of61Lnj5Xj704m8.jpg" alt="Spider-Man">
+          <img src="https://image.tmdb.org/t/p/w500/7WsyChQLEftFiDOVTGkv3hFvsB1.jpg" alt="Avengers">
+          <img src="https://image.tmdb.org/t/p/w500/r2J02Z2OpNTctfOSN1Ydgii51I3.jpg" alt="Guardians">
+          <img src="https://image.tmdb.org/t/p/w500/9BAjt8nSWrMVWwEAFQe4m6d4p.jpg" alt="Logan">
+          <img src="https://image.tmdb.org/t/p/w500/1E5baUexMoLqbA4hLPyAVVIZkw.jpg" alt="Deadpool">
+          <img src="https://image.tmdb.org/t/p/w500/yGSxMiY0BN1S1cYQ5ZYkT6f.jpg" alt="Captain America">
+        </div>
+        <div class="onboarding-content">
+          <h1>Oglądaj każdy film</h1>
+          <p>Wszystkie epickie produkcje Marvela w jednym miejscu.<br>Oglądaj, pobieraj i rezerwuj gdziekolwiek jesteś.</p>
+          <button class="btn-primary" onclick="showPage('login')">Wejdź teraz</button>
+        </div>
       </div>
+    </div>
 
-      <div class="movie-row" id="continueRow"></div>
-
-    </section>
-
-    <section>
-
-      <div class="section-title">
-        <h2>Kategorie</h2>
+    <!-- LOGIN -->
+    <div id="login" class="page">
+      <div class="status-bar">
+        <span>12:04</span>
+        <div class="icons">●●● &nbsp; Wi-Fi &nbsp; 100%</div>
       </div>
-
-      <div class="categories">
-
-        <button data-category="Wszystkie">
-          🎬 Wszystkie
-        </button>
-
-        <button data-category="Sport / Walki">
-          🥊 Sport / Walki
-        </button>
-
-        <button data-category="Horror">
-          👻 Horror
-        </button>
-
-        <button data-category="Akcja">
-          🔥 Akcja
-        </button>
-
-        <button data-category="Komedia">
-          😂 Komedia
-        </button>
-
-        <button data-category="Thriller">
-          🕵️ Thriller
-        </button>
-
-        <button data-category="Sci-Fi">
-          🚀 Sci-Fi
-        </button>
-
-        <button data-category="Dramat">
-          🎭 Dramat
-        </button>
-
-        <button data-category="Romans">
-          ❤️ Romans
-        </button>
-
+      <div class="auth-page">
+        <div class="logo"><h1>Cineverse</h1></div>
+        <h2>Zaloguj się</h2>
+        <p class="subtitle">Witaj z powrotem! Kontynuuj oglądanie.</p>
+        <div class="form-group">
+          <label>Adres e-mail</label>
+          <input type="email" placeholder="jan@email.com" value="demo@cineverse.pl">
+        </div>
+        <div class="form-group">
+          <label>Hasło</label>
+          <input type="password" placeholder="••••••••" value="haslo123">
+        </div>
+        <button class="btn-primary" onclick="showPage('home')" style="margin-top:10px">Zaloguj się</button>
+        <div class="auth-links">
+          Nie masz konta? <a href="#" onclick="showPage('register');return false">Zarejestruj się</a>
+        </div>
       </div>
+    </div>
 
-    </section>
-
-    <section>
-
-      <div class="section-title">
-        <h2>Dla Ciebie</h2>
+    <!-- REGISTER -->
+    <div id="register" class="page">
+      <div class="status-bar">
+        <span>12:04</span>
+        <div class="icons">●●● &nbsp; Wi-Fi &nbsp; 100%</div>
       </div>
+      <div class="auth-page">
+        <div class="logo"><h1>Cineverse</h1></div>
+        <h2>Utwórz konto</h2>
+        <p class="subtitle">Dołącz i oglądaj tysiące filmów.</p>
+        <div class="form-group">
+          <label>Imię i nazwisko</label>
+          <input type="text" placeholder="Jan Kowalski">
+        </div>
+        <div class="form-group">
+          <label>Adres e-mail</label>
+          <input type="email" placeholder="jan@email.com">
+        </div>
+        <div class="form-group">
+          <label>Hasło</label>
+          <input type="password" placeholder="Minimum 8 znaków">
+        </div>
+        <button class="btn-primary" onclick="showPage('packages')" style="margin-top:10px">Zarejestruj się</button>
+        <div class="auth-links">
+          Masz już konto? <a href="#" onclick="showPage('login');return false">Zaloguj się</a>
+        </div>
+      </div>
+    </div>
 
-      <div class="movie-row" id="movieRow"></div>
-
-    </section>
-
-    <section>
-
-      <div class="section-title">
-        <h2>Najlepiej oceniane</h2>
+    <!-- HOME -->
+    <div id="home" class="page">
+      <div class="status-bar">
+        <span>12:04</span>
+        <div class="icons">●●● &nbsp; Wi-Fi &nbsp; 100%</div>
+      </div>
+      <div class="home-header">
+        <div class="user-info">
+          <div class="avatar">JK</div>
+          <div class="text">
+            <small>Witaj z powrotem</small><br>
+            <strong>Jan Kowalski</strong>
+          </div>
+        </div>
+        <div class="bell">🔔</div>
       </div>
 
-      <div class="movie-row" id="topRow"></div>
+      <div class="scroll-area">
+        <div class="section">
+          <div class="section-header">
+            <h3>Teraz w kinach</h3>
+            <a href="#">Zobacz wszystkie</a>
+          </div>
+          <div class="featured">
+            <img src="https://image.tmdb.org/t/p/w780/8Vt6mWEReuy4Of61Lnj5Xj704m8.jpg" alt="Spider-Man">
+            <div class="overlay">
+              <h4>Spider-Man: Brand New Day</h4>
+              <div class="meta">Science Fiction • 2h 25m • PG-13</div>
+            </div>
+          </div>
+          <div class="movie-scroll" style="margin-top:14px">
+            <div class="movie-card">
+              <img src="https://image.tmdb.org/t/p/w500/d5NXSklXo0qyIYkgV94aNCWoA4.jpg" alt="Dune">
+              <div class="info">
+                <div class="title">Dune: Part Three</div>
+                <div class="meta"><span class="rating">★ 8.4</span> 2h 45m</div>
+              </div>
+            </div>
+            <div class="movie-card">
+              <img src="https://image.tmdb.org/t/p/w500/7WsyChQLEftFiDOVTGkv3hFvsB1.jpg" alt="Avengers">
+              <div class="info">
+                <div class="title">Avengers: Doomsday</div>
+                <div class="meta"><span class="rating">★ 8.1</span> 2h 50m</div>
+              </div>
+            </div>
+            <div class="movie-card">
+              <img src="https://image.tmdb.org/t/p/w500/r2J02Z2OpNTctfOSN1Ydgii51I3.jpg" alt="Guardians">
+              <div class="info">
+                <div class="title">Guardians of the Galaxy</div>
+                <div class="meta"><span class="rating">★ 8.0</span> 2h 01m</div>
+              </div>
+            </div>
+          </div>
+        </div>
 
-    </section>
+        <div class="section">
+          <div class="section-header">
+            <h3>Nadchodzące</h3>
+            <a href="#">Zobacz wszystkie</a>
+          </div>
+          <div class="movie-scroll">
+            <div class="movie-card">
+              <img src="https://image.tmdb.org/t/p/w500/1E5baUexMoLqbA4hLPyAVVIZkw.jpg" alt="Deadpool">
+              <div class="info">
+                <div class="title">Deadpool & Wolverine</div>
+                <div class="meta"><span class="rating">Wkrótce</span></div>
+              </div>
+            </div>
+            <div class="movie-card">
+              <img src="https://image.tmdb.org/t/p/w500/9BAjt8nSWrMVWwEAFQe4m6d4p.jpg" alt="Logan">
+              <div class="info">
+                <div class="title">Logan</div>
+                <div class="meta"><span class="rating">★ 8.1</span> 2h 17m</div>
+              </div>
+            </div>
+            <div class="movie-card">
+              <img src="https://image.tmdb.org/t/p/w500/yGSxMiY0BN1S1cYQ5ZYkT6f.jpg" alt="Captain">
+              <div class="info">
+                <div class="title">Captain America</div>
+                <div class="meta"><span class="rating">★ 7.8</span> 2h 04m</div>
+              </div>
+            </div>
+          </div>
+        </div>
 
-    <section class="premium-card">
+        <div class="section">
+          <div class="section-header">
+            <h3>Popularne teraz</h3>
+            <a href="#">Zobacz wszystkie</a>
+          </div>
+          <div class="movie-scroll">
+            <div class="movie-card">
+              <img src="https://image.tmdb.org/t/p/w500/8Vt6mWEReuy4Of61Lnj5Xj704m8.jpg" alt="Spider">
+              <div class="info">
+                <div class="title">Spider-Man</div>
+                <div class="meta"><span class="rating">★ 8.2</span> W kinach</div>
+              </div>
+            </div>
+            <div class="movie-card">
+              <img src="https://image.tmdb.org/t/p/w500/7WsyChQLEftFiDOVTGkv3hFvsB1.jpg" alt="Avengers">
+              <div class="info">
+                <div class="title">Avengers</div>
+                <div class="meta"><span class="rating">★ 8.4</span> W kinach</div>
+              </div>
+            </div>
+            <div class="movie-card">
+              <img src="https://image.tmdb.org/t/p/w500/d5NXSklXo0qyIYkgV94aNCWoA4.jpg" alt="Dune">
+              <div class="info">
+                <div class="title">Dune</div>
+                <div class="meta"><span class="rating">★ 8.0</span> W kinach</div>
+              </div>
+            </div>
+          </div>
+        </div>
 
-      <span class="badge">💎 PREMIUM</span>
+        <div class="section">
+          <div class="section-header"><h3>Przeglądaj według gatunku</h3></div>
+          <div class="genres">
+            <div class="genre-chip active">Akcja</div>
+            <div class="genre-chip">Przygodowy</div>
+            <div class="genre-chip">Science Fiction</div>
+            <div class="genre-chip">Horror</div>
+            <div class="genre-chip">Komedia</div>
+            <div class="genre-chip">Dramat</div>
+          </div>
+        </div>
 
-      <h2>Oglądaj bez ograniczeń</h2>
+        <div class="section">
+          <div class="section-header">
+            <h3>Najwyżej oceniane wszech czasów</h3>
+            <a href="#">Zobacz wszystkie</a>
+          </div>
+          <div class="movie-scroll">
+            <div class="movie-card">
+              <img src="https://image.tmdb.org/t/p/w500/gEU2QniE6E77NI6lCU6MxlNBvIx.jpg" alt="Interstellar">
+              <div class="info">
+                <div class="title">Interstellar</div>
+                <div class="meta"><span class="rating">★ 8.7</span> 2014</div>
+              </div>
+            </div>
+            <div class="movie-card">
+              <img src="https://image.tmdb.org/t/p/w500/qJ2tW6WMUDux911r6m7haRef0WH.jpg" alt="Dark Knight">
+              <div class="info">
+                <div class="title">The Dark Knight</div>
+                <div class="meta"><span class="rating">★ 9.0</span> 2008</div>
+              </div>
+            </div>
+            <div class="movie-card">
+              <img src="https://image.tmdb.org/t/p/w500/9gk7adHYeDvHkCSEqAvQNLV5Uge.jpg" alt="Inception">
+              <div class="info">
+                <div class="title">Inception</div>
+                <div class="meta"><span class="rating">★ 8.8</span> 2010</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
 
-      <p>
-        4K, brak reklam i dostęp do całej biblioteki.
-      </p>
-
-      <button class="primary" id="premiumHomeButton">
-        Zobacz pakiety
-      </button>
-
-    </section>
-
-  </main>
-
-  <nav class="bottom-nav">
-
-    <button class="nav active" id="navHome">
-      🏠
-      <small>Główna</small>
-    </button>
-
-    <button class="nav" id="navSearch">
-      🔍
-      <small>Szukaj</small>
-    </button>
-
-    <button class="nav add" id="navAdd">
-      ＋
-    </button>
-
-    <button class="nav" id="navLibrary">
-      📚
-      <small>Biblioteka</small>
-    </button>
-
-    <button class="nav" id="navProfile">
-      👤
-      <small>Profil</small>
-    </button>
-
-  </nav>
-
-</div>
-
-<!-- FILM -->
-
-<div id="movieScreen" class="screen hidden">
-
-  <button class="back" id="movieBack">‹</button>
-
-  <div class="video-player">
-
-    <video id="videoPlayer"
-           controls
-           playsinline
-           preload="metadata">
-    </video>
-
-  </div>
-
-  <div class="screen-content">
-
-    <div class="movie-meta">
-
-      <span id="movieQuality">4K</span>
-
-      <span id="movieRating">
-        ⭐ 8.7
-      </span>
-
-      <span id="movieDuration">
-        1h 48min
-      </span>
-
+      <div class="bottom-nav">
+        <a href="#" class="nav-item active" onclick="showPage('home');return false">
+          <span class="icon">🏠</span> Start
+        </a>
+        <a href="#" class="nav-item" onclick="alert('Wyszukiwarka – wkrótce');return false">
+          <span class="icon">🔍</span> Szukaj
+        </a>
+        <a href="#" class="nav-item" onclick="alert('Zapisane – wkrótce');return false">
+          <span class="icon">🔖</span> Zapisane
+        </a>
+        <a href="#" class="nav-item" onclick="showPage('profile');return false">
+          <span class="icon">👤</span> Profil
+        </a>
+      </div>
     </div>
 
-    <h1 id="movieTitle">
-      Film
-    </h1>
-
-    <div class="actions">
-
-      <button class="primary" id="playMovieButton">
-        ▶ Odtwórz
-      </button>
-
-      <button class="secondary" id="favoriteButton">
-        ♡ Biblioteka
-      </button>
-
-    </div>
-
-    <h3>Opis</h3>
-
-    <p id="movieDescription"></p>
-
-    <h3>Kategoria</h3>
-
-    <p id="movieCategory"></p>
-
-    <h3>Twoja ocena</h3>
-
-    <div class="rating">
-
-      <button data-rating="1">1</button>
-      <button data-rating="2">2</button>
-      <button data-rating="3">3</button>
-      <button data-rating="4">4</button>
-      <button data-rating="5">5</button>
-      <button data-rating="6">6</button>
-      <button data-rating="7">7</button>
-      <button data-rating="8">8</button>
-      <button data-rating="9">9</button>
-      <button data-rating="10">10</button>
-
-    </div>
-
-  </div>
-
-</div>
-
-<!-- LOGOWANIE -->
-
-<div id="loginScreen" class="screen hidden">
-
-  <button class="back" id="loginBack">‹</button>
-
-  <div class="auth">
-
-    <div class="logo big">
-      FILM<span>APP</span>
-    </div>
-
-    <h1>Zaloguj się</h1>
-
-    <p>
-      Wejdź na swoje konto.
-    </p>
-
-    <input
-      id="loginEmail"
-      type="email"
-      autocomplete="email"
-      placeholder="Adres e-mail">
-
-    <input
-      id="loginPassword"
-      type="password"
-      autocomplete="current-password"
-      placeholder="Hasło">
-
-    <button class="primary full" id="loginButton">
-      Zaloguj się
-    </button>
-
-    <button class="text-btn" id="forgotButton">
-      Nie pamiętasz hasła?
-    </button>
-
-    <button class="secondary full" id="registerButton">
-      Utwórz konto
-    </button>
-
-  </div>
-
-</div>
-
-<!-- REJESTRACJA -->
-
-<div id="registerScreen" class="screen hidden">
-
-  <button class="back" id="registerBack">‹</button>
-
-  <div class="auth">
-
-    <div class="logo big">
-      FILM<span>APP</span>
-    </div>
-
-    <h1>Utwórz konto</h1>
-
-    <p>
-      Załóż swoje konto FilmApp.
-    </p>
-
-    <input
-      id="registerName"
-      type="text"
-      placeholder="Nazwa użytkownika">
-
-    <input
-      id="registerEmail"
-      type="email"
-      autocomplete="email"
-      placeholder="Adres e-mail">
-
-    <input
-      id="registerPassword"
-      type="password"
-      autocomplete="new-password"
-      placeholder="Hasło">
-
-    <button class="primary full" id="createAccountButton">
-      Zarejestruj się
-    </button>
-
-    <button class="text-btn" id="goLoginButton">
-      Mam już konto
-    </button>
-
-  </div>
-
-</div>
-
-<!-- PROFIL -->
-
-<div id="profileScreen" class="screen hidden">
-
-  <button class="back" id="profileBack">‹</button>
-
-  <div class="profile">
-
-    <div class="avatar">
-      👤
-    </div>
-
-    <h1 id="profileName">
-      Gość
-    </h1>
-
-    <p id="profileEmail">
-      Nie jesteś zalogowany
-    </p>
-
-    <div id="profileLoggedOut">
-
-      <button class="primary full" id="profileLogin">
-        Zaloguj się
-      </button>
-
-    </div>
-
-    <div id="profileLoggedIn" class="hidden">
-
+    <!-- PROFILE -->
+    <div id="profile" class="page">
+      <div class="status-bar">
+        <span>12:04</span>
+        <div class="icons">●●● &nbsp; Wi-Fi &nbsp; 100%</div>
+      </div>
+      <div class="profile-header">
+        <div class="profile-avatar">JK</div>
+        <h2>Jan Kowalski</h2>
+        <p>demo@cineverse.pl</p>
+      </div>
       <div class="profile-menu">
-
-        <button id="profileLibrary">
-          📚 Moja biblioteka
-        </button>
-
-        <button id="profilePremium">
-          💎 Premium
-        </button>
-
-        <button id="profileReset">
-          🔐 Reset hasła
-        </button>
-
-        <button id="profileLogout">
-          🚪 Wyloguj
-        </button>
-
+        <a href="#" class="menu-item" onclick="showPage('packages');return false">
+          <div class="left"><div class="icon-box">💎</div> Mój pakiet</div>
+          <span>›</span>
+        </a>
+        <a href="#" class="menu-item">
+          <div class="left"><div class="icon-box">🎬</div> Historia oglądania</div>
+          <span>›</span>
+        </a>
+        <a href="#" class="menu-item">
+          <div class="left"><div class="icon-box">⬇️</div> Pobrane</div>
+          <span>›</span>
+        </a>
+        <a href="#" class="menu-item">
+          <div class="left"><div class="icon-box">⚙️</div> Ustawienia</div>
+          <span>›</span>
+        </a>
+        <a href="#" class="menu-item">
+          <div class="left"><div class="icon-box">❓</div> Pomoc i wsparcie</div>
+          <span>›</span>
+        </a>
+        <a href="#" class="menu-item" onclick="showPage('onboarding');return false" style="margin-top:20px">
+          <div class="left"><div class="icon-box">🚪</div> Wyloguj się</div>
+          <span>›</span>
+        </a>
       </div>
+      <div class="bottom-nav">
+        <a href="#" class="nav-item" onclick="showPage('home');return false">
+          <span class="icon">🏠</span> Start
+        </a>
+        <a href="#" class="nav-item"><span class="icon">🔍</span> Szukaj</a>
+        <a href="#" class="nav-item"><span class="icon">🔖</span> Zapisane</a>
+        <a href="#" class="nav-item active" onclick="showPage('profile');return false">
+          <span class="icon">👤</span> Profil
+        </a>
+      </div>
+    </div>
 
+    <!-- PACKAGES -->
+    <div id="packages" class="page">
+      <div class="status-bar">
+        <span>12:04</span>
+        <div class="icons">●●● &nbsp; Wi-Fi &nbsp; 100%</div>
+      </div>
+      <div class="packages-page">
+        <a href="#" class="back-btn" onclick="showPage('profile');return false">← Wróć</a>
+        <h1>Wybierz pakiet</h1>
+        <p class="intro">Odblokuj pełny dostęp do tysięcy filmów, jakości 4K i ekskluzywnych treści.</p>
+
+        <div class="package-card basic">
+          <h3>Podstawowy</h3>
+          <div class="price">19 zł <span>/ miesiąc</span></div>
+          <ul>
+            <li>Oglądaj na 1 urządzeniu</li>
+            <li>Jakość HD (1080p)</li>
+            <li>Reklamy ograniczone</li>
+            <li>Dostęp do katalogu standard</li>
+          </ul>
+          <button class="btn-package" onclick="alert('Wybrano pakiet Podstawowy')">Wybierz</button>
+        </div>
+
+        <div class="package-card premium">
+          <h3>Premium</h3>
+          <div class="price">39 zł <span>/ miesiąc</span></div>
+          <ul>
+            <li>Oglądaj na 3 urządzeniach jednocześnie</li>
+            <li>Jakość Full HD + Dolby Atmos</li>
+            <li>Bez reklam</li>
+            <li>Pobieranie offline</li>
+            <li>Wczesny dostęp do premier</li>
+            <li>Ekskluzywne treści Marvel</li>
+          </ul>
+          <button class="btn-package" onclick="alert('Wybrano pakiet Premium 🎉')">Wybierz Premium</button>
+        </div>
+
+        <div class="package-card ultra">
+          <h3>Ultra 4K</h3>
+          <div class="price">59 zł <span>/ miesiąc</span></div>
+          <ul>
+            <li>Oglądaj na 5 urządzeniach jednocześnie</li>
+            <li>Jakość 4K Ultra HD + HDR</li>
+            <li>Dolby Vision & Atmos</li>
+            <li>Bez reklam + priorytet serwerów</li>
+            <li>Pobieranie w 4K</li>
+            <li>Wszystkie funkcje Premium</li>
+            <li>Dostęp do premier kinowych</li>
+            <li>Wsparcie 24/7</li>
+          </ul>
+          <button class="btn-package" onclick="alert('Wybrano pakiet Ultra 4K 🔥')">Wybierz Ultra 4K</button>
+        </div>
+      </div>
     </div>
 
   </div>
 
-</div>
-
-<!-- BIBLIOTEKA -->
-
-<div id="libraryScreen" class="screen hidden">
-
-  <button class="back" id="libraryBack">‹</button>
-
-  <div class="screen-content">
-
-    <h1>Biblioteka</h1>
-
-    <div class="library-tabs">
-
-      <button data-library="favorites">
-        ❤️ Ulubione
-      </button>
-
-      <button data-library="history">
-        🕐 Historia
-      </button>
-
-      <button data-library="continue">
-        ▶ Kontynuuj
-      </button>
-
-    </div>
-
-    <div id="libraryMovies"></div>
-
-  </div>
-
-</div>
-
-<!-- PREMIUM -->
-
-<div id="premiumScreen" class="screen hidden">
-
-  <button class="back" id="premiumBack">‹</button>
-
-  <div class="screen-content">
-
-    <span class="badge">
-      💎 PREMIUM
-    </span>
-
-    <h1>Wybierz pakiet</h1>
-
-    <div id="currentPlan"></div>
-
-    <div class="plans">
-
-      <div class="plan">
-
-        <h2>Free</h2>
-
-        <p>
-          Podstawowy dostęp
-        </p>
-
-        <strong>
-          0 zł
-        </strong>
-
-        <button class="secondary full">
-          Aktualny plan
-        </button>
-
-      </div>
-
-      <div class="plan featured-plan">
-
-        <h2>Premium</h2>
-
-        <p>
-          Full HD · Bez reklam
-        </p>
-
-        <strong>
-          19,99 zł / miesiąc
-        </strong>
-
-        <button class="primary full"
-                data-buy="Premium"
-                data-days="30">
-          Kup Premium
-        </button>
-
-        <div class="voucher">
-
-          <input
-            id="premiumCode"
-            placeholder="Kod bonu">
-
-          <button data-voucher="premium">
-            Aktywuj
-          </button>
-
-        </div>
-
-      </div>
-
-      <div class="plan">
-
-        <h2>Premium 4K</h2>
-
-        <p>
-          4K · Bez reklam
-        </p>
-
-        <strong>
-          29,99 zł / miesiąc
-        </strong>
-
-        <button class="primary full"
-                data-buy="Premium 4K"
-                data-days="30">
-          Kup 4K
-        </button>
-
-        <div class="voucher">
-
-          <input
-            id="premium4kCode"
-            placeholder="Kod bonu">
-
-          <button data-voucher="4k">
-            Aktywuj
-          </button>
-
-        </div>
-
-      </div>
-
-      <div class="plan">
-
-        <h2>Premium na zawsze</h2>
-
-        <p>
-          Pełny dostęp bez terminu.
-        </p>
-
-        <strong>
-          199,99 zł
-        </strong>
-
-        <button class="primary full"
-                data-buy="Premium na zawsze"
-                data-days="0">
-          Kup na zawsze
-        </button>
-
-        <div class="voucher">
-
-          <input
-            id="lifetimeCode"
-            placeholder="Kod bonu">
-
-          <button data-voucher="lifetime">
-            Aktywuj
-          </button>
-
-        </div>
-
-      </div>
-
-    </div>
-
-  </div>
-
-</div>
-
-<!-- SZUKAJ -->
-
-<div id="searchScreen" class="screen hidden">
-
-  <button class="back" id="searchBack">‹</button>
-
-  <div class="screen-content">
-
-    <h1>Szukaj</h1>
-
-    <input
-      class="search-input"
-      id="searchInput"
-      type="search"
-      placeholder="Szukaj filmu...">
-
-    <div id="searchResults"></div>
-
-  </div>
-
-</div>
-
-<!-- DODAWANIE -->
-
-<div id="addScreen" class="screen hidden">
-
-  <button class="back" id="addBack">‹</button>
-
-  <div class="screen-content">
-
-    <h1>Dodaj film</h1>
-
-    <p>
-      Dodaj film do lokalnej wersji biblioteki.
-    </p>
-
-    <input
-      id="addTitle"
-      type="text"
-      placeholder="Tytuł filmu">
-
-    <textarea
-      id="addDescription"
-      placeholder="Opis filmu"></textarea>
-
-    <input
-      id="addCategory"
-      type="text"
-      placeholder="Kategoria">
-
-    <input
-      id="addDuration"
-      type="text"
-      placeholder="Czas, np. 1h 40min">
-
-    <input
-      id="addQuality"
-      type="text"
-      placeholder="Jakość, np. HD lub 4K">
-
-    <input
-      id="addVideo"
-      type="url"
-      placeholder="Adres filmu MP4">
-
-    <button class="primary full" id="addMovieButton">
-      Dodaj film
-    </button>
-
-  </div>
-
-</div>
-
-<div id="toast"></div>
-
-<script src="app.js"></script>
-
+  <script>
+    function showPage(pageId) {
+      document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+      document.getElementById(pageId).classList.add('active');
+      window.scrollTo(0, 0);
+    }
+  </script>
 </body>
 </html>
