@@ -1,0 +1,376 @@
+<!-- index.html -->
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#09060f">
+  <title>FilmApp</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+<div id="app">
+
+  <header class="topbar">
+    <div class="logo">FILM<span>APP</span></div>
+    <button class="icon-btn" onclick="openProfile()">◯</button>
+  </header>
+
+  <main id="main">
+
+    <section class="hero">
+      <div class="hero-content">
+        <span class="badge">POLECANY</span>
+        <h1>Twój świat<br>filmów</h1>
+        <p>Oglądaj, oceniaj i odkrywaj nowe filmy.</p>
+        <button class="primary" onclick="openMovie('featured')">
+          ▶ Oglądaj teraz
+        </button>
+      </div>
+    </section>
+
+    <section>
+      <div class="section-title">
+        <h2>Kontynuuj oglądanie</h2>
+        <button>Więcej</button>
+      </div>
+
+      <div class="movie-row">
+
+        <article class="movie-card" onclick="openMovie('fight')">
+          <div class="poster poster1">
+            <span class="quality">4K</span>
+            <span class="play">▶</span>
+          </div>
+          <h3>Ostatnia walka</h3>
+          <p>⭐ 8.7 · 1h 48min</p>
+        </article>
+
+        <article class="movie-card" onclick="openMovie('horror')">
+          <div class="poster poster2">
+            <span class="quality">HD</span>
+            <span class="play">▶</span>
+          </div>
+          <h3>Noc bez końca</h3>
+          <p>⭐ 8.1 · 1h 36min</p>
+        </article>
+
+        <article class="movie-card" onclick="openMovie('action')">
+          <div class="poster poster3">
+            <span class="quality">4K</span>
+            <span class="play">▶</span>
+          </div>
+          <h3>Ostatnia misja</h3>
+          <p>⭐ 9.0 · 2h 04min</p>
+        </article>
+
+      </div>
+    </section>
+
+    <section>
+      <div class="section-title">
+        <h2>Kategorie</h2>
+      </div>
+
+      <div class="categories">
+        <button onclick="filterMovies('sport')">🥊 Sport / Walki</button>
+        <button onclick="filterMovies('horror')">👻 Horror</button>
+        <button onclick="filterMovies('action')">🔥 Akcja</button>
+        <button onclick="filterMovies('comedy')">😂 Komedia</button>
+        <button onclick="filterMovies('thriller')">🕵️ Thriller</button>
+        <button onclick="filterMovies('scifi')">🚀 Sci-Fi</button>
+        <button onclick="filterMovies('drama')">🎭 Dramat</button>
+        <button onclick="filterMovies('romance')">❤️ Romans</button>
+      </div>
+    </section>
+
+    <section>
+      <div class="section-title">
+        <h2>Dla Ciebie</h2>
+        <button>Więcej</button>
+      </div>
+
+      <div class="movie-row">
+
+        <article class="movie-card" onclick="openMovie('action')">
+          <div class="poster poster3">
+            <span class="quality">4K</span>
+            <span class="play">▶</span>
+          </div>
+          <h3>Ostatnia misja</h3>
+          <p>⭐ 9.0 · 2h 04min</p>
+        </article>
+
+        <article class="movie-card" onclick="openMovie('horror')">
+          <div class="poster poster2">
+            <span class="quality">4K</span>
+            <span class="play">▶</span>
+          </div>
+          <h3>Noc bez końca</h3>
+          <p>⭐ 8.1 · 1h 36min</p>
+        </article>
+
+        <article class="movie-card" onclick="openMovie('fight')">
+          <div class="poster poster1">
+            <span class="quality">HD</span>
+            <span class="play">▶</span>
+          </div>
+          <h3>Ostatnia walka</h3>
+          <p>⭐ 8.7 · 1h 48min</p>
+        </article>
+
+      </div>
+    </section>
+
+    <section class="premium-card">
+      <span>💎 PREMIUM</span>
+      <h2>Oglądaj bez ograniczeń</h2>
+      <p>4K, brak reklam i dostęp do całej biblioteki.</p>
+      <button class="primary" onclick="openPremium()">Zobacz pakiety</button>
+    </section>
+
+  </main>
+
+  <nav class="bottom-nav">
+    <button class="nav active" onclick="goHome()">⌂<small>Główna</small></button>
+    <button class="nav" onclick="openSearch()">⌕<small>Szukaj</small></button>
+    <button class="nav add" onclick="openAdd()">＋</button>
+    <button class="nav" onclick="openLibrary()">♡<small>Biblioteka</small></button>
+    <button class="nav" onclick="openProfile()">◯<small>Profil</small></button>
+  </nav>
+
+</div>
+
+
+<!-- EKRAN FILMU -->
+<div id="movieScreen" class="screen hidden">
+
+  <button class="back" onclick="closeScreen()">‹</button>
+
+  <div class="video-player">
+    <div class="video-placeholder">▶</div>
+  </div>
+
+  <div class="screen-content">
+    <div class="movie-meta">
+      <span>4K</span>
+      <span>⭐ 8.7</span>
+      <span>1h 48min</span>
+    </div>
+
+    <h1 id="movieTitle">Tytuł filmu</h1>
+
+    <div class="actions">
+      <button class="primary">▶ Odtwórz</button>
+      <button class="secondary">＋ Biblioteka</button>
+    </div>
+
+    <h3>Opis</h3>
+    <p id="movieDescription">
+      Historia pełna emocji, akcji i niespodziewanych wydarzeń.
+      Odkryj film i zobacz, jak potoczy się cała historia.
+    </p>
+
+    <h3>Oceń film</h3>
+
+    <div class="rating">
+      <button onclick="rate(1)">1</button>
+      <button onclick="rate(2)">2</button>
+      <button onclick="rate(3)">3</button>
+      <button onclick="rate(4)">4</button>
+      <button onclick="rate(5)">5</button>
+      <button onclick="rate(6)">6</button>
+      <button onclick="rate(7)">7</button>
+      <button onclick="rate(8)">8</button>
+      <button onclick="rate(9)">9</button>
+      <button onclick="rate(10)">10</button>
+    </div>
+  </div>
+
+</div>
+
+
+<!-- LOGOWANIE -->
+<div id="loginScreen" class="screen hidden">
+
+  <button class="back" onclick="closeScreen()">‹</button>
+
+  <div class="auth">
+    <div class="logo big">FILM<span>APP</span></div>
+    <h1>Witaj ponownie</h1>
+    <p>Zaloguj się na swoje konto.</p>
+
+    <input type="email" id="loginEmail" placeholder="Adres e-mail">
+    <input type="password" id="loginPassword" placeholder="Hasło">
+
+    <button class="primary full" onclick="login()">Zaloguj się</button>
+
+    <button class="text-btn" onclick="forgotPassword()">
+      Nie pamiętasz hasła?
+    </button>
+
+    <button class="secondary full" onclick="register()">
+      Utwórz konto
+    </button>
+  </div>
+
+</div>
+
+
+<!-- PROFIL -->
+<div id="profileScreen" class="screen hidden">
+
+  <button class="back" onclick="closeScreen()">‹</button>
+
+  <div class="profile">
+
+    <div class="avatar">👤</div>
+
+    <h1 id="profileName">Twój profil</h1>
+    <p id="profileEmail">Zaloguj się, aby korzystać z konta.</p>
+
+    <div class="profile-menu">
+      <button onclick="openLibrary()">📚 Moja biblioteka</button>
+      <button onclick="openPremium()">💎 Premium</button>
+      <button>⚙️ Ustawienia</button>
+      <button onclick="forgotPassword()">🔐 Zmień hasło</button>
+      <button onclick="logout()">🚪 Wyloguj</button>
+    </div>
+
+  </div>
+
+</div>
+
+
+<!-- BIBLIOTEKA -->
+<div id="libraryScreen" class="screen hidden">
+
+  <button class="back" onclick="closeScreen()">‹</button>
+
+  <div class="screen-content">
+    <h1>Biblioteka</h1>
+
+    <div class="library-tabs">
+      <button>❤️ Ulubione</button>
+      <button>🕐 Historia</button>
+      <button>▶ Kontynuuj</button>
+      <button>🔖 Zapisane</button>
+    </div>
+
+    <div class="empty-library">
+      <div>♡</div>
+      <h2>Twoja biblioteka</h2>
+      <p>Dodane przez Ciebie filmy pojawią się tutaj.</p>
+    </div>
+  </div>
+
+</div>
+
+
+<!-- PREMIUM -->
+<div id="premiumScreen" class="screen hidden">
+
+  <button class="back" onclick="closeScreen()">‹</button>
+
+  <div class="screen-content">
+    <span class="badge">💎 PREMIUM</span>
+    <h1>Wybierz pakiet</h1>
+
+    <div class="plans">
+
+      <div class="plan">
+        <h2>Free</h2>
+        <p>Podstawowy dostęp</p>
+        <strong>0 zł</strong>
+        <button class="secondary full">Aktualny plan</button>
+      </div>
+
+      <div class="plan featured-plan">
+        <h2>Premium</h2>
+        <p>Full HD · Bez reklam</p>
+        <strong>19,99 zł / mies.</strong>
+        <button class="primary full">Kup Premium</button>
+
+        <div class="voucher">
+          <input id="premiumCode" placeholder="Kod bonu">
+          <button onclick="activateVoucher('premium')">Aktywuj</button>
+        </div>
+      </div>
+
+      <div class="plan">
+        <h2>Premium 4K</h2>
+        <p>4K · Bez reklam · Premium</p>
+        <strong>29,99 zł / mies.</strong>
+        <button class="primary full">Kup 4K</button>
+
+        <div class="voucher">
+          <input id="premium4kCode" placeholder="Kod bonu">
+          <button onclick="activateVoucher('4k')">Aktywuj</button>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="voucher-info">
+      <h3>🎁 Masz bon?</h3>
+      <p>
+        Wpisz kod otrzymany od nas, aby aktywować odpowiedni pakiet.
+      </p>
+    </div>
+
+  </div>
+
+</div>
+
+
+<!-- SZUKANIE -->
+<div id="searchScreen" class="screen hidden">
+
+  <button class="back" onclick="closeScreen()">‹</button>
+
+  <div class="screen-content">
+    <h1>Szukaj</h1>
+
+    <input
+      class="search-input"
+      id="searchInput"
+      type="search"
+      placeholder="Szukaj filmów..."
+      oninput="searchMovies()"
+    >
+
+    <div id="searchResults"></div>
+  </div>
+
+</div>
+
+
+<!-- DODAWANIE FILMU -->
+<div id="addScreen" class="screen hidden">
+
+  <button class="back" onclick="closeScreen()">‹</button>
+
+  <div class="screen-content">
+    <h1>Dodaj film</h1>
+
+    <input type="text" placeholder="Tytuł filmu">
+    <textarea placeholder="Opis filmu"></textarea>
+    <input type="text" placeholder="Kategoria">
+    <input type="text" placeholder="Czas trwania">
+    <input type="text" placeholder="Jakość, np. HD / 4K">
+
+    <button class="primary full">
+      Dodaj film
+    </button>
+
+  </div>
+
+</div>
+
+
+<script src="app.js"></script>
+
+</body>
+</html>
