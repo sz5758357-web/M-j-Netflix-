@@ -1,15 +1,14 @@
 "use strict";
-/*
-  FILMAPP
-  Wersja demonstracyjna.
-  UWAGA:
-  Konto, płatności i bony są tutaj lokalne.
-  Prawdziwa aplikacja będzie wymagała backendu,
-  bazy danych i operatora płatności.
-*/
-/* =========================
-   DANE FILMÓW
-========================= */
+
+/* =========================================================
+   FILMAPP
+   Poprawiona wersja app.js
+   ========================================================= */
+
+/* =========================================================
+   FILMY
+   ========================================================= */
+
 const movies = [
   {
     id: "fight",
@@ -18,11 +17,9 @@ const movies = [
     rating: 8.7,
     duration: "1h 48min",
     quality: "4K",
-    description:
-      "Zawodnik dostaje ostatnią szansę na powrót na szczyt.",
+    description: "Zawodnik dostaje ostatnią szansę na powrót na szczyt.",
     poster: "poster1",
-    video:
-      "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4"
+    video: "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4"
   },
   {
     id: "horror",
@@ -31,11 +28,9 @@ const movies = [
     rating: 8.1,
     duration: "1h 36min",
     quality: "HD",
-    description:
-      "Grupa przyjaciół odkrywa miejsce, z którego nie da się łatwo wydostać.",
+    description: "Grupa przyjaciół odkrywa miejsce, z którego nie da się łatwo wydostać.",
     poster: "poster2",
-    video:
-      "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4"
+    video: "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4"
   },
   {
     id: "action",
@@ -44,11 +39,9 @@ const movies = [
     rating: 9.0,
     duration: "2h 04min",
     quality: "4K",
-    description:
-      "Agent otrzymuje zadanie, które zmieni całe jego życie.",
+    description: "Agent otrzymuje zadanie, które zmieni całe jego życie.",
     poster: "poster3",
-    video:
-      "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4"
+    video: "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4"
   },
   {
     id: "space",
@@ -57,11 +50,9 @@ const movies = [
     rating: 8.9,
     duration: "2h 12min",
     quality: "4K",
-    description:
-      "Załoga statku kosmicznego odkrywa coś, czego nie powinno być w kosmosie.",
+    description: "Załoga statku kosmicznego odkrywa coś, czego nie powinno być w kosmosie.",
     poster: "poster4",
-    video:
-      "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4"
+    video: "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4"
   },
   {
     id: "shadow",
@@ -70,11 +61,9 @@ const movies = [
     rating: 8.5,
     duration: "1h 55min",
     quality: "4K",
-    description:
-      "Tajemnicze wydarzenia prowadzą detektywa do ukrytej prawdy.",
+    description: "Tajemnicze wydarzenia prowadzą detektywa do ukrytej prawdy.",
     poster: "poster5",
-    video:
-      "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4"
+    video: "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4"
   },
   {
     id: "comedy",
@@ -83,50 +72,94 @@ const movies = [
     rating: 7.9,
     duration: "1h 42min",
     quality: "HD",
-    description:
-      "Zwykła podróż zamienia się w serię absurdalnych wydarzeń.",
+    description: "Zwykła podróż zamienia się w serię absurdalnych wydarzeń.",
     poster: "poster6",
-    video:
-      "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4"
+    video: "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4"
   }
 ];
-/* =========================
-   STAN
-========================= */
-let state;
-try {
-  state = JSON.parse(
-    localStorage.getItem("filmapp_state")
-  );
-} catch {
-  state = null;
-}
-if (!state) {
-  state = {
-    user: null,
-    favorites: [],
-    history: [],
-    ratings: {},
-    customMovies: [],
-    premium: {
-      plan: "Free",
-      expires: null
-    }
-  };
-}
+
+
+/* =========================================================
+   STAN APLIKACJI
+   ========================================================= */
+
+const DEFAULT_STATE = {
+  user: null,
+  favorites: [],
+  history: [],
+  ratings: {},
+  customMovies: [],
+  premium: {
+    plan: "Free",
+    expires: null
+  }
+};
+
+let state = loadState();
 let currentMovie = null;
-/* =========================
-   ZAPIS
-========================= */
-function saveState() {
-  localStorage.setItem(
-    "filmapp_state",
-    JSON.stringify(state)
-  );
+
+
+/* =========================================================
+   LOCAL STORAGE
+   ========================================================= */
+
+function loadState() {
+  try {
+    const saved = localStorage.getItem("filmapp_state");
+
+    if (!saved) {
+      return structuredClone(DEFAULT_STATE);
+    }
+
+    const parsed = JSON.parse(saved);
+
+    return {
+      ...structuredClone(DEFAULT_STATE),
+      ...parsed,
+      favorites: Array.isArray(parsed.favorites)
+        ? parsed.favorites
+        : [],
+      history: Array.isArray(parsed.history)
+        ? parsed.history
+        : [],
+      ratings: parsed.ratings || {},
+      customMovies: Array.isArray(parsed.customMovies)
+        ? parsed.customMovies
+        : [],
+      premium: {
+        ...DEFAULT_STATE.premium,
+        ...(parsed.premium || {})
+      }
+    };
+  } catch (error) {
+    console.error("Błąd localStorage:", error);
+    return structuredClone(DEFAULT_STATE);
+  }
 }
-/* =========================
+
+
+function saveState() {
+  try {
+    localStorage.setItem(
+      "filmapp_state",
+      JSON.stringify(state)
+    );
+  } catch (error) {
+    console.error("Nie można zapisać danych:", error);
+    toast("Nie udało się zapisać danych.");
+  }
+}
+
+
+/* =========================================================
    POMOCNICZE
-========================= */
+   ========================================================= */
+
+function $(id) {
+  return document.getElementById(id);
+}
+
+
 function allMovies() {
   return [
     ...movies,
@@ -135,166 +168,269 @@ function allMovies() {
       : [])
   ];
 }
-function $(id) {
-  return document.getElementById(id);
+
+
+function escapeHTML(value) {
+  return String(value ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
 }
+
+
 function toast(message) {
   const element = $("toast");
+
+  if (!element) {
+    return;
+  }
+
   element.textContent = message;
   element.classList.add("show");
-  clearTimeout(window.toastTimer);
-  window.toastTimer = setTimeout(() => {
+
+  clearTimeout(window.filmappToastTimer);
+
+  window.filmappToastTimer = setTimeout(() => {
     element.classList.remove("show");
   }, 2500);
 }
-/* =========================
+
+
+/* =========================================================
    EKRANY
-========================= */
+   ========================================================= */
+
 function showScreen(id) {
-  document
-    .querySelectorAll(".screen")
-    .forEach(screen => {
-      screen.classList.add("hidden");
-    });
+  document.querySelectorAll(".screen").forEach(screen => {
+    screen.classList.add("hidden");
+  });
+
   const screen = $(id);
-  if (screen) {
-    screen.classList.remove("hidden");
-    screen.scrollTop = 0;
+
+  if (!screen) {
+    console.error("Nie znaleziono ekranu:", id);
+    return;
   }
+
+  screen.classList.remove("hidden");
+  screen.scrollTop = 0;
+
+  document.body.style.overflow = "hidden";
 }
+
+
 function closeScreen() {
-  document
-    .querySelectorAll(".screen")
-    .forEach(screen => {
-      screen.classList.add("hidden");
-    });
+  document.querySelectorAll(".screen").forEach(screen => {
+    screen.classList.add("hidden");
+  });
+
   const video = $("videoPlayer");
+
   if (video) {
     video.pause();
   }
+
+  document.body.style.overflow = "";
 }
+
+
 function goHome() {
   closeScreen();
+
   window.scrollTo({
     top: 0,
     behavior: "smooth"
   });
+
+  setActiveNav("navHome");
 }
-/* =========================
+
+
+function setActiveNav(id) {
+  document.querySelectorAll(".nav").forEach(nav => {
+    nav.classList.remove("active");
+  });
+
+  const button = $(id);
+
+  if (button) {
+    button.classList.add("active");
+  }
+}
+
+
+/* =========================================================
    KARTY FILMÓW
-========================= */
+   ========================================================= */
+
 function createMovieCard(movie) {
+  const safeId = escapeHTML(movie.id);
+
   return `
     <article
       class="movie-card"
-      data-movie-id="${movie.id}">
-      <div class="poster ${movie.poster}">
+      data-movie-id="${safeId}"
+      role="button"
+      tabindex="0"
+      aria-label="Otwórz ${escapeHTML(movie.title)}">
+
+      <div class="poster ${escapeHTML(movie.poster || "poster1")}">
+
         <span class="quality">
-          ${movie.quality}
+          ${escapeHTML(movie.quality || "HD")}
         </span>
+
         <span class="poster-title">
           ${escapeHTML(movie.title)}
         </span>
+
         <span class="play">
           ▶
         </span>
+
       </div>
+
       <h3>
         ${escapeHTML(movie.title)}
       </h3>
+
       <p>
-        ⭐ ${movie.rating} · ${movie.duration}
+        ⭐ ${Number(movie.rating || 0).toFixed(1)}
+        · ${escapeHTML(movie.duration || "—")}
       </p>
+
     </article>
   `;
 }
+
+
 function renderMovies(list = allMovies()) {
-  $("movieRow").innerHTML = list
+  const movieRow = $("movieRow");
+  const topRow = $("topRow");
+  const continueRow = $("continueRow");
+
+  if (!movieRow || !topRow || !continueRow) {
+    return;
+  }
+
+  movieRow.innerHTML = list
     .slice(0, 10)
     .map(createMovieCard)
     .join("");
-  $("topRow").innerHTML = [...allMovies()]
-    .sort((a, b) => b.rating - a.rating)
-    .slice(0, 10)
+
+  const topMovies = [...allMovies()]
+    .sort((a, b) => Number(b.rating || 0) - Number(a.rating || 0))
+    .slice(0, 10);
+
+  topRow.innerHTML = topMovies
     .map(createMovieCard)
     .join("");
+
   const continueMovies = state.history
-    .map(id =>
-      allMovies().find(movie => movie.id === id)
-    )
+    .map(id => allMovies().find(movie => movie.id === id))
     .filter(Boolean);
+
   if (continueMovies.length) {
-    $("continueRow").innerHTML =
-      continueMovies
-        .map(createMovieCard)
-        .join("");
+    continueRow.innerHTML = continueMovies
+      .map(createMovieCard)
+      .join("");
   } else {
-    $("continueRow").innerHTML =
-      allMovies()
-        .slice(0, 5)
-        .map(createMovieCard)
-        .join("");
+    continueRow.innerHTML = allMovies()
+      .slice(0, 5)
+      .map(createMovieCard)
+      .join("");
   }
 }
-/* =========================
-   OTWIERANIE FILMU
-========================= */
+
+
+/* =========================================================
+   FILM
+   ========================================================= */
+
 function openMovie(id) {
-  const movie = allMovies()
-    .find(item => item.id === id);
+  const movie = allMovies().find(item => item.id === id);
+
   if (!movie) {
     toast("Nie znaleziono filmu.");
     return;
   }
+
   currentMovie = movie;
-  $("movieTitle").textContent =
-    movie.title;
-  $("movieDescription").textContent =
-    movie.description;
-  $("movieCategory").textContent =
-    movie.category;
-  $("movieQuality").textContent =
-    movie.quality;
+
+  $("movieTitle").textContent = movie.title;
+  $("movieDescription").textContent = movie.description;
+  $("movieCategory").textContent = movie.category;
+  $("movieQuality").textContent = movie.quality || "HD";
   $("movieRating").textContent =
-    `⭐ ${movie.rating}`;
-  $("movieDuration").textContent =
-    movie.duration;
+    `⭐ ${Number(movie.rating || 0).toFixed(1)}`;
+  $("movieDuration").textContent = movie.duration || "—";
+
   const video = $("videoPlayer");
-  video.pause();
-  video.src = movie.video || "";
-  video.load();
+
+  if (video) {
+    video.pause();
+
+    video.removeAttribute("src");
+
+    if (movie.video) {
+      video.src = movie.video;
+      video.load();
+    }
+  }
+
   if (!state.history.includes(movie.id)) {
     state.history.unshift(movie.id);
+
     if (state.history.length > 30) {
-      state.history.pop();
+      state.history.length = 30;
     }
+
     saveState();
   }
+
   updateFavoriteButton();
+
   showScreen("movieScreen");
 }
+
+
 function playMovie() {
   if (!currentMovie) {
+    toast("Najpierw wybierz film.");
     return;
   }
+
   const video = $("videoPlayer");
-  if (!video.src) {
-    toast("Ten film nie ma jeszcze filmu wideo.");
+
+  if (!video || !currentMovie.video) {
+    toast("Ten film nie ma dostępnego materiału wideo.");
     return;
   }
-  video.play().catch(() => {
-    toast("Nie udało się rozpocząć odtwarzania.");
-  });
+
+  video.play()
+    .then(() => {
+      toast("Odtwarzanie ▶");
+    })
+    .catch(error => {
+      console.error(error);
+      toast("Kliknij ponownie, aby rozpocząć film.");
+    });
 }
-/* =========================
+
+
+/* =========================================================
    BIBLIOTEKA
-========================= */
+   ========================================================= */
+
 function toggleFavorite() {
   if (!currentMovie) {
     return;
   }
-  const index =
-    state.favorites.indexOf(currentMovie.id);
+
+  const index = state.favorites.indexOf(currentMovie.id);
+
   if (index === -1) {
     state.favorites.push(currentMovie.id);
     toast("Dodano do biblioteki ❤️");
@@ -302,42 +438,61 @@ function toggleFavorite() {
     state.favorites.splice(index, 1);
     toast("Usunięto z biblioteki.");
   }
+
   saveState();
   updateFavoriteButton();
 }
+
+
 function updateFavoriteButton() {
-  if (!currentMovie) {
+  const button = $("favoriteButton");
+
+  if (!button || !currentMovie) {
     return;
   }
-  const exists =
-    state.favorites.includes(currentMovie.id);
-  $("favoriteButton").textContent =
-    exists
-      ? "♥ W bibliotece"
-      : "♡ Biblioteka";
+
+  const exists = state.favorites.includes(currentMovie.id);
+
+  button.textContent = exists
+    ? "♥ W bibliotece"
+    : "♡ Biblioteka";
 }
+
+
 function openLibrary() {
+  setActiveNav("navLibrary");
   showScreen("libraryScreen");
   showLibrary("favorites");
 }
+
+
 function showLibrary(type) {
+  const container = $("libraryMovies");
+
+  if (!container) {
+    return;
+  }
+
   let ids = [];
+
   if (type === "favorites") {
     ids = state.favorites;
   }
+
   if (type === "history") {
     ids = state.history;
   }
+
   if (type === "continue") {
     ids = state.history;
   }
+
   const selected = ids
-    .map(id =>
-      allMovies().find(movie => movie.id === id)
-    )
+    .map(id => allMovies().find(movie => movie.id === id))
     .filter(Boolean);
+
   if (!selected.length) {
-    $("libraryMovies").innerHTML = `
+    container.innerHTML = `
       <div class="empty-library">
         <div>♡</div>
         <h2>Biblioteka jest pusta</h2>
@@ -346,281 +501,425 @@ function showLibrary(type) {
         </p>
       </div>
     `;
+
     return;
   }
-  $("libraryMovies").innerHTML =
-    selected
-      .map(movie => `
-        <div
-          class="library-item"
-          data-movie-id="${movie.id}">
-          <div class="mini-poster ${movie.poster}"></div>
-          <div>
-            <h3>
-              ${escapeHTML(movie.title)}
-            </h3>
-            <p>
-              ${escapeHTML(movie.category)}
-            </p>
-            <p>
-              ⭐ ${movie.rating} · ${movie.duration}
-            </p>
-          </div>
+
+  container.innerHTML = selected
+    .map(movie => `
+      <div
+        class="library-item"
+        data-movie-id="${escapeHTML(movie.id)}">
+
+        <div class="mini-poster ${escapeHTML(movie.poster || "poster1")}"></div>
+
+        <div>
+          <h3>${escapeHTML(movie.title)}</h3>
+
+          <p>
+            ${escapeHTML(movie.category)}
+          </p>
+
+          <p>
+            ⭐ ${Number(movie.rating || 0).toFixed(1)}
+            · ${escapeHTML(movie.duration || "—")}
+          </p>
         </div>
-      `)
-      .join("");
+
+      </div>
+    `)
+    .join("");
 }
-/* =========================
-   OCENY
-========================= */
+
+
+/* =========================================================
+   OCENIANIE
+   ========================================================= */
+
 function rateMovie(number) {
   if (!currentMovie) {
     return;
   }
-  state.ratings[currentMovie.id] =
-    number;
+
+  const rating = Math.max(1, Math.min(10, Number(number)));
+
+  state.ratings[currentMovie.id] = rating;
+
   saveState();
-  toast(
-    `Twoja ocena: ${number}/10 ⭐`
-  );
+
+  document
+    .querySelectorAll("[data-rating]")
+    .forEach(button => {
+      const value = Number(button.dataset.rating);
+
+      button.style.opacity = value <= rating ? "1" : ".45";
+    });
+
+  toast(`Twoja ocena: ${rating}/10 ⭐`);
 }
-/* =========================
+
+
+/* =========================================================
    KATEGORIE
-========================= */
+   ========================================================= */
+
 function filterMovies(category) {
+  setActiveNav("navHome");
+
   if (category === "Wszystkie") {
     renderMovies();
     goHome();
     return;
   }
-  const filtered =
-    allMovies()
-      .filter(movie =>
-        movie.category === category
-      );
-  $("movieRow").innerHTML =
-    filtered.length
-      ? filtered.map(createMovieCard).join("")
-      : "<p>Brak filmów w tej kategorii.</p>";
+
+  const filtered = allMovies()
+    .filter(movie => movie.category === category);
+
+  const movieRow = $("movieRow");
+
+  if (!movieRow) {
+    return;
+  }
+
+  movieRow.innerHTML = filtered.length
+    ? filtered.map(createMovieCard).join("")
+    : `<p>Brak filmów w kategorii „${escapeHTML(category)}”.</p>`;
+
   window.scrollTo({
     top: 0,
     behavior: "smooth"
   });
 }
-/* =========================
+
+
+/* =========================================================
    SZUKANIE
-========================= */
+   ========================================================= */
+
 function openSearch() {
+  setActiveNav("navSearch");
   showScreen("searchScreen");
+
   setTimeout(() => {
-    $("searchInput").focus();
-  }, 300);
+    const input = $("searchInput");
+
+    if (input) {
+      input.focus();
+    }
+  }, 250);
 }
+
+
 function searchMovies() {
-  const query =
-    $("searchInput")
-      .value
-      .toLowerCase()
-      .trim();
-  if (!query) {
-    $("searchResults").innerHTML = "";
+  const input = $("searchInput");
+  const resultsContainer = $("searchResults");
+
+  if (!input || !resultsContainer) {
     return;
   }
-  const results =
-    allMovies()
-      .filter(movie =>
-        movie.title
-          .toLowerCase()
-          .includes(query) ||
-        movie.category
-          .toLowerCase()
-          .includes(query)
-      );
+
+  const query = input.value
+    .toLowerCase()
+    .trim();
+
+  if (!query) {
+    resultsContainer.innerHTML = "";
+    return;
+  }
+
+  const results = allMovies().filter(movie =>
+    movie.title.toLowerCase().includes(query) ||
+    movie.category.toLowerCase().includes(query) ||
+    movie.description.toLowerCase().includes(query)
+  );
+
   if (!results.length) {
-    $("searchResults").innerHTML = `
+    resultsContainer.innerHTML = `
       <div class="result">
         Nie znaleziono filmu.
       </div>
     `;
+
     return;
   }
-  $("searchResults").innerHTML =
-    results
-      .map(movie => `
-        <div
-          class="result"
-          data-movie-id="${movie.id}">
-          <strong>
-            ${escapeHTML(movie.title)}
-          </strong>
-          <p>
-            ${escapeHTML(movie.category)}
-            · ⭐ ${movie.rating}
-            · ${movie.duration}
-          </p>
-        </div>
-      `)
-      .join("");
+
+  resultsContainer.innerHTML = results
+    .map(movie => `
+      <div
+        class="result"
+        data-movie-id="${escapeHTML(movie.id)}">
+
+        <strong>
+          ${escapeHTML(movie.title)}
+        </strong>
+
+        <p>
+          ${escapeHTML(movie.category)}
+          · ⭐ ${Number(movie.rating || 0).toFixed(1)}
+          · ${escapeHTML(movie.duration || "—")}
+        </p>
+
+      </div>
+    `)
+    .join("");
 }
-/* =========================
+
+
+/* =========================================================
    PROFIL
-========================= */
+   ========================================================= */
+
 function openProfile() {
+  setActiveNav("navProfile");
   updateProfile();
   showScreen("profileScreen");
 }
+
+
 function updateProfile() {
   if (state.user) {
     $("profileName").textContent =
       state.user.name;
+
     $("profileEmail").textContent =
       state.user.email;
+
     $("profileLoggedOut")
       .classList.add("hidden");
+
     $("profileLoggedIn")
       .classList.remove("hidden");
   } else {
     $("profileName").textContent =
       "Gość";
+
     $("profileEmail").textContent =
       "Nie jesteś zalogowany";
+
     $("profileLoggedOut")
       .classList.remove("hidden");
+
     $("profileLoggedIn")
       .classList.add("hidden");
   }
 }
+
+
 function openLogin() {
   showScreen("loginScreen");
 }
+
+
 function openRegister() {
   showScreen("registerScreen");
 }
+
+
+/* =========================================================
+   REJESTRACJA
+   ========================================================= */
+
 function createAccount() {
-  const name =
-    $("registerName").value.trim();
-  const email =
-    $("registerEmail").value.trim();
-  const password =
-    $("registerPassword").value;
+  const name = $("registerName").value.trim();
+  const email = $("registerEmail").value.trim().toLowerCase();
+  const password = $("registerPassword").value;
+
   if (!name || !email || !password) {
     toast("Wypełnij wszystkie pola.");
     return;
   }
-  if (!email.includes("@")) {
-    toast("Podaj prawidłowy e-mail.");
+
+  if (!email.includes("@") || !email.includes(".")) {
+    toast("Podaj prawidłowy adres e-mail.");
     return;
   }
+
   if (password.length < 8) {
-    toast(
-      "Hasło musi mieć minimum 8 znaków."
-    );
+    toast("Hasło musi mieć minimum 8 znaków.");
     return;
   }
+
   state.user = {
     name,
     email
   };
+
   saveState();
+
+  $("registerName").value = "";
+  $("registerEmail").value = "";
   $("registerPassword").value = "";
+
   toast("Konto zostało utworzone 🎉");
+
   setTimeout(() => {
     openProfile();
   }, 500);
 }
+
+
+/* =========================================================
+   LOGOWANIE
+   ========================================================= */
+
 function login() {
-  const email =
-    $("loginEmail").value.trim();
-  const password =
-    $("loginPassword").value;
+  const email = $("loginEmail").value.trim().toLowerCase();
+  const password = $("loginPassword").value;
+
   if (!email || !password) {
-    toast(
-      "Wpisz e-mail i hasło."
-    );
+    toast("Wpisz e-mail i hasło.");
     return;
   }
+
   state.user = {
     name: email.split("@")[0],
     email
   };
+
   saveState();
+
+  $("loginEmail").value = "";
+  $("loginPassword").value = "";
+
   toast("Zalogowano 👋");
+
   setTimeout(() => {
     openProfile();
   }, 500);
 }
+
+
+/* =========================================================
+   RESET HASŁA
+   ========================================================= */
+
 function forgotPassword() {
-  const email =
-    prompt("Podaj adres e-mail:");
+  const email = prompt(
+    "Podaj adres e-mail, na który ma zostać wysłany link resetujący:"
+  );
+
   if (!email) {
     return;
   }
-  toast(
-    "Link resetujący został wysłany na e-mail."
-  );
+
+  if (!email.includes("@")) {
+    toast("Podaj prawidłowy adres e-mail.");
+    return;
+  }
+
+  /*
+    DEMO:
+    Tutaj nie wysyłamy prawdziwego e-maila.
+    Prawdziwy reset hasła będzie wymagał backendu.
+  */
+
+  toast("Link resetujący został wysłany na e-mail 📧");
 }
+
+
+/* =========================================================
+   WYLOGOWANIE
+   ========================================================= */
+
 function logout() {
   state.user = null;
+
   saveState();
   updateProfile();
+
   toast("Wylogowano.");
-  setTimeout(closeScreen, 500);
+
+  setTimeout(() => {
+    closeScreen();
+    setActiveNav("navHome");
+  }, 500);
 }
-/* =========================
+
+
+/* =========================================================
    PREMIUM
-========================= */
+   ========================================================= */
+
 function openPremium() {
   updatePremium();
   showScreen("premiumScreen");
 }
+
+
 function updatePremium() {
-  const element =
-    $("currentPlan");
+  const element = $("currentPlan");
+
+  if (!element) {
+    return;
+  }
+
   if (state.premium.plan === "Free") {
     element.innerHTML = `
       <div class="plan-status">
         Aktualny plan: <strong>Free</strong>
       </div>
     `;
+
     return;
   }
+
   if (state.premium.expires === null) {
     element.innerHTML = `
       <div class="plan-status">
-        💎 <strong>
-        ${escapeHTML(state.premium.plan)}
-        </strong><br>
+        💎 <strong>${escapeHTML(state.premium.plan)}</strong><br>
         Aktywny bezterminowo.
       </div>
     `;
+
     return;
   }
-  const date =
-    new Date(state.premium.expires);
+
+  const expires = Number(state.premium.expires);
+
+  if (!Number.isFinite(expires) || expires <= Date.now()) {
+    state.premium = {
+      plan: "Free",
+      expires: null
+    };
+
+    saveState();
+
+    element.innerHTML = `
+      <div class="plan-status">
+        Aktualny plan: <strong>Free</strong>
+      </div>
+    `;
+
+    return;
+  }
+
+  const date = new Date(expires);
+
   element.innerHTML = `
     <div class="plan-status">
-      💎 <strong>
-      ${escapeHTML(state.premium.plan)}
-      </strong><br>
-      Aktywny do:
-      ${date.toLocaleDateString("pl-PL")}
+      💎 <strong>${escapeHTML(state.premium.plan)}</strong><br>
+      Aktywny do: ${date.toLocaleDateString("pl-PL")}
     </div>
   `;
 }
+
+
+/* =========================================================
+   KUPNO PAKIETU
+   ========================================================= */
+
 function buyPlan(plan, days) {
   if (!state.user) {
-    toast(
-      "Najpierw zaloguj się."
-    );
+    toast("Najpierw zaloguj się.");
     setTimeout(openLogin, 700);
     return;
   }
+
   /*
-    W tej wersji jest tryb DEMO.
-    Kliknięcie aktywuje pakiet bez pobierania pieniędzy.
-    Prawdziwe płatności podłączymy później
-    przez bezpieczny backend.
+    TRYB DEMO.
+    Nie pobiera prawdziwych pieniędzy.
   */
+
   if (days === 0) {
     state.premium = {
       plan,
@@ -629,110 +928,125 @@ function buyPlan(plan, days) {
   } else {
     state.premium = {
       plan,
-      expires:
-        Date.now() +
-        days * 24 * 60 * 60 * 1000
+      expires: Date.now() + days * 86400000
     };
   }
+
   saveState();
   updatePremium();
-  toast(
-    `${plan} aktywny 💎`
-  );
+
+  toast(`${plan} został aktywowany 💎`);
 }
-/* =========================
+
+
+/* =========================================================
    BONY
-========================= */
+   ========================================================= */
+
 const voucherCodes = {
   "FILM-PREMIUM-2026": {
     plan: "Premium",
     days: 30
   },
+
   "FILM-4K-2026": {
     plan: "Premium 4K",
     days: 30
   },
+
   "FILM-LIFE-2026": {
     plan: "Premium na zawsze",
     days: 0
   }
 };
+
+
+function getUsedVouchers() {
+  try {
+    const used = JSON.parse(
+      localStorage.getItem("filmapp_used_vouchers") || "[]"
+    );
+
+    return Array.isArray(used) ? used : [];
+  } catch {
+    return [];
+  }
+}
+
+
 function activateVoucher(type) {
   if (!state.user) {
-    toast(
-      "Najpierw zaloguj się."
-    );
+    toast("Najpierw zaloguj się.");
     setTimeout(openLogin, 700);
     return;
   }
-  let input;
+
+  let input = null;
+
   if (type === "premium") {
     input = $("premiumCode");
   }
+
   if (type === "4k") {
     input = $("premium4kCode");
   }
+
   if (type === "lifetime") {
     input = $("lifetimeCode");
   }
-  const code =
-    input.value
-      .trim()
-      .toUpperCase();
+
+  if (!input) {
+    toast("Nie znaleziono pola kodu.");
+    return;
+  }
+
+  const code = input.value
+    .trim()
+    .toUpperCase();
+
   if (!code) {
     toast("Wpisz kod bonu.");
     return;
   }
-  const voucher =
-    voucherCodes[code];
+
+  const voucher = voucherCodes[code];
+
   if (!voucher) {
     toast("Nieprawidłowy kod.");
     return;
   }
-  let used = [];
-  try {
-    used =
-      JSON.parse(
-        localStorage.getItem(
-          "filmapp_used_vouchers"
-        ) || "[]"
-      );
-  } catch {
-    used = [];
-  }
+
+  const used = getUsedVouchers();
+
   if (used.includes(code)) {
-    toast(
-      "Ten bon został już wykorzystany."
-    );
+    toast("Ten bon został już wykorzystany.");
     return;
   }
+
   if (
     type === "premium" &&
     voucher.plan !== "Premium"
   ) {
-    toast(
-      "Ten kod jest przeznaczony dla innego pakietu."
-    );
+    toast("Ten kod jest przeznaczony dla innego pakietu.");
     return;
   }
+
   if (
     type === "4k" &&
     voucher.plan !== "Premium 4K"
   ) {
-    toast(
-      "Ten kod jest przeznaczony dla innego pakietu."
-    );
+    toast("Ten kod jest przeznaczony dla innego pakietu.");
     return;
   }
+
   if (
     type === "lifetime" &&
     voucher.plan !== "Premium na zawsze"
   ) {
-    toast(
-      "Ten kod jest przeznaczony dla innego pakietu."
-    );
+    toast("Ten kod jest przeznaczony dla innego pakietu.");
     return;
   }
+
   if (voucher.days === 0) {
     state.premium = {
       plan: voucher.plan,
@@ -741,68 +1055,71 @@ function activateVoucher(type) {
   } else {
     state.premium = {
       plan: voucher.plan,
-      expires:
-        Date.now() +
-        voucher.days * 24 * 60 * 60 * 1000
+      expires: Date.now() + voucher.days * 86400000
     };
   }
+
   used.push(code);
+
   localStorage.setItem(
     "filmapp_used_vouchers",
     JSON.stringify(used)
   );
+
   saveState();
+
   input.value = "";
+
   updatePremium();
-  toast(
-    "Bon został aktywowany 🎉"
-  );
+
+  toast("Bon został aktywowany 🎉");
 }
-/* =========================
+
+
+/* =========================================================
    DODAWANIE FILMU
-========================= */
+   ========================================================= */
+
 function openAdd() {
   if (!state.user) {
-    toast(
-      "Zaloguj się, żeby dodawać filmy."
-    );
+    toast("Zaloguj się, żeby dodawać filmy.");
     setTimeout(openLogin, 700);
     return;
   }
+
   showScreen("addScreen");
 }
+
+
 function addMovie() {
   if (!state.user) {
-    toast(
-      "Musisz być zalogowany."
-    );
+    toast("Musisz być zalogowany.");
     return;
   }
-  const title =
-    $("addTitle").value.trim();
-  const description =
-    $("addDescription").value.trim();
+
+  const title = $("addTitle").value.trim();
+  const description = $("addDescription").value.trim();
   const category =
-    $("addCategory").value.trim() ||
-    "Inne";
+    $("addCategory").value.trim() || "Inne";
   const duration =
-    $("addDuration").value.trim() ||
-    "—";
+    $("addDuration").value.trim() || "—";
   const quality =
-    $("addQuality").value.trim() ||
-    "HD";
+    $("addQuality").value.trim() || "HD";
   const video =
     $("addVideo").value.trim();
+
   if (!title || !description) {
-    toast(
-      "Podaj tytuł i opis."
-    );
+    toast("Podaj tytuł i opis.");
     return;
   }
+
+  if (video && !/^https?:\/\//i.test(video)) {
+    toast("Adres filmu musi zaczynać się od http:// lub https://");
+    return;
+  }
+
   const newMovie = {
-    id:
-      "custom-" +
-      Date.now(),
+    id: "custom-" + Date.now(),
     title,
     category,
     rating: 0,
@@ -812,301 +1129,441 @@ function addMovie() {
     poster: "poster4",
     video
   };
-  state.customMovies.push(
-    newMovie
-  );
+
+  state.customMovies.push(newMovie);
+
   saveState();
   renderMovies();
-  toast(
-    "Film został dodany 🎬"
-  );
+
   $("addTitle").value = "";
   $("addDescription").value = "";
   $("addCategory").value = "";
   $("addDuration").value = "";
   $("addQuality").value = "";
   $("addVideo").value = "";
-  setTimeout(
-    closeScreen,
-    600
-  );
+
+  toast("Film został dodany 🎬");
+
+  setTimeout(() => {
+    closeScreen();
+  }, 600);
 }
-/* =========================
-   ESCAPE HTML
-========================= */
-function escapeHTML(value) {
-  return String(value)
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#039;");
+
+
+/* =========================================================
+   EVENT DELEGATION
+   Dzięki temu kliknięcia w filmy działają również
+   po ponownym renderowaniu list.
+   ========================================================= */
+
+function setupMovieClicks() {
+  document.addEventListener("click", event => {
+    const card = event.target.closest("[data-movie-id]");
+
+    if (!card) {
+      return;
+    }
+
+    const id = card.dataset.movieId;
+
+    if (id) {
+      openMovie(id);
+    }
+  });
+
+  document.addEventListener("keydown", event => {
+    const card = event.target.closest("[data-movie-id]");
+
+    if (!card) {
+      return;
+    }
+
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      openMovie(card.dataset.movieId);
+    }
+  });
 }
-/* =========================
-   EVENTY
-========================= */
+
+
+/* =========================================================
+   EVENTY PRZYCISKÓW
+   ========================================================= */
+
 function setupEvents() {
-  $("profileTopButton")
-    .addEventListener("click", openProfile);
-  $("heroWatch")
-    .addEventListener(
-      "click",
-      () => openMovie("action")
-    );
-  $("continueMore")
-    .addEventListener(
-      "click",
-      openLibrary
-    );
-  $("premiumHomeButton")
-    .addEventListener(
-      "click",
-      openPremium
-    );
-  $("navHome")
-    .addEventListener("click", goHome);
-  $("navSearch")
-    .addEventListener(
-      "click",
-      openSearch
-    );
-  $("navAdd")
-    .addEventListener(
-      "click",
-      openAdd
-    );
-  $("navLibrary")
-    .addEventListener(
-      "click",
-      openLibrary
-    );
-  $("navProfile")
-    .addEventListener(
-      "click",
-      openProfile
-    );
-  $("movieBack")
-    .addEventListener(
-      "click",
-      closeScreen
-    );
-  $("loginBack")
-    .addEventListener(
-      "click",
-      closeScreen
-    );
-  $("registerBack")
-    .addEventListener(
-      "click",
-      closeScreen
-    );
-  $("profileBack")
-    .addEventListener(
-      "click",
-      closeScreen
-    );
-  $("libraryBack")
-    .addEventListener(
-      "click",
-      closeScreen
-    );
-  $("premiumBack")
-    .addEventListener(
-      "click",
-      closeScreen
-    );
-  $("searchBack")
-    .addEventListener(
-      "click",
-      closeScreen
-    );
-  $("addBack")
-    .addEventListener(
-      "click",
-      closeScreen
-    );
-  $("playMovieButton")
-    .addEventListener(
-      "click",
-      playMovie
-    );
-  $("favoriteButton")
-    .addEventListener(
-      "click",
-      toggleFavorite
-    );
-  $("loginButton")
-    .addEventListener(
-      "click",
-      login
-    );
-  $("registerButton")
-    .addEventListener(
-      "click",
-      openRegister
-    );
-  $("forgotButton")
-    .addEventListener(
-      "click",
-      forgotPassword
-    );
-  $("createAccountButton")
-    .addEventListener(
-      "click",
-      createAccount
-    );
-  $("goLoginButton")
-    .addEventListener(
-      "click",
-      openLogin
-    );
-  $("profileLogin")
-    .addEventListener(
-      "click",
-      openLogin
-    );
-  $("profileLibrary")
-    .addEventListener(
-      "click",
-      openLibrary
-    );
-  $("profilePremium")
-    .addEventListener(
-      "click",
-      openPremium
-    );
-  $("profileReset")
-    .addEventListener(
-      "click",
-      forgotPassword
-    );
-  $("profileLogout")
-    .addEventListener(
-      "click",
-      logout
-    );
+
+  /* GÓRA */
+
+  $("profileTopButton")?.addEventListener(
+    "click",
+    openProfile
+  );
+
+
+  /* HERO */
+
+  $("heroWatch")?.addEventListener(
+    "click",
+    () => openMovie("action")
+  );
+
+
+  /* CONTINUE */
+
+  $("continueMore")?.addEventListener(
+    "click",
+    openLibrary
+  );
+
+
+  /* PREMIUM */
+
+  $("premiumHomeButton")?.addEventListener(
+    "click",
+    openPremium
+  );
+
+
+  /* DOLNA NAWIGACJA */
+
+  $("navHome")?.addEventListener(
+    "click",
+    goHome
+  );
+
+  $("navSearch")?.addEventListener(
+    "click",
+    openSearch
+  );
+
+  $("navAdd")?.addEventListener(
+    "click",
+    openAdd
+  );
+
+  $("navLibrary")?.addEventListener(
+    "click",
+    openLibrary
+  );
+
+  $("navProfile")?.addEventListener(
+    "click",
+    openProfile
+  );
+
+
+  /* BACK */
+
+  $("movieBack")?.addEventListener(
+    "click",
+    closeScreen
+  );
+
+  $("loginBack")?.addEventListener(
+    "click",
+    closeScreen
+  );
+
+  $("registerBack")?.addEventListener(
+    "click",
+    closeScreen
+  );
+
+  $("profileBack")?.addEventListener(
+    "click",
+    closeScreen
+  );
+
+  $("libraryBack")?.addEventListener(
+    "click",
+    closeScreen
+  );
+
+  $("premiumBack")?.addEventListener(
+    "click",
+    closeScreen
+  );
+
+  $("searchBack")?.addEventListener(
+    "click",
+    closeScreen
+  );
+
+  $("addBack")?.addEventListener(
+    "click",
+    closeScreen
+  );
+
+
+  /* FILM */
+
+  $("playMovieButton")?.addEventListener(
+    "click",
+    playMovie
+  );
+
+  $("favoriteButton")?.addEventListener(
+    "click",
+    toggleFavorite
+  );
+
+
+  /* LOGOWANIE */
+
+  $("loginButton")?.addEventListener(
+    "click",
+    login
+  );
+
+  $("registerButton")?.addEventListener(
+    "click",
+    openRegister
+  );
+
+  $("forgotButton")?.addEventListener(
+    "click",
+    forgotPassword
+  );
+
+
+  /* REJESTRACJA */
+
+  $("createAccountButton")?.addEventListener(
+    "click",
+    createAccount
+  );
+
+  $("goLoginButton")?.addEventListener(
+    "click",
+    openLogin
+  );
+
+
+  /* PROFIL */
+
+  $("profileLogin")?.addEventListener(
+    "click",
+    openLogin
+  );
+
+  $("profileLibrary")?.addEventListener(
+    "click",
+    openLibrary
+  );
+
+  $("profilePremium")?.addEventListener(
+    "click",
+    openPremium
+  );
+
+  $("profileReset")?.addEventListener(
+    "click",
+    forgotPassword
+  );
+
+  $("profileLogout")?.addEventListener(
+    "click",
+    logout
+  );
+
+
+  /* KATEGORIE */
+
   document
     .querySelectorAll("[data-category]")
     .forEach(button => {
       button.addEventListener(
         "click",
-        () =>
-          filterMovies(
-            button.dataset.category
-          )
+        () => filterMovies(
+          button.dataset.category
+        )
       );
     });
+
+
+  /* OCENY */
+
   document
     .querySelectorAll("[data-rating]")
     .forEach(button => {
       button.addEventListener(
         "click",
-        () =>
-          rateMovie(
-            Number(button.dataset.rating)
-          )
+        () => rateMovie(
+          Number(button.dataset.rating)
+        )
       );
     });
+
+
+  /* BIBLIOTEKA */
+
   document
     .querySelectorAll("[data-library]")
     .forEach(button => {
       button.addEventListener(
         "click",
-        () =>
-          showLibrary(
-            button.dataset.library
-          )
+        () => showLibrary(
+          button.dataset.library
+        )
       );
     });
+
+
+  /* PREMIUM */
+
   document
     .querySelectorAll("[data-buy]")
     .forEach(button => {
       button.addEventListener(
         "click",
-        () =>
-          buyPlan(
-            button.dataset.buy,
-            Number(button.dataset.days)
-          )
+        () => buyPlan(
+          button.dataset.buy,
+          Number(button.dataset.days)
+        )
       );
     });
+
+
+  /* BONY */
+
   document
     .querySelectorAll("[data-voucher]")
     .forEach(button => {
       button.addEventListener(
         "click",
-        () =>
-          activateVoucher(
-            button.dataset.voucher
-          )
+        () => activateVoucher(
+          button.dataset.voucher
+        )
       );
     });
-  $("searchInput")
-    .addEventListener(
-      "input",
-      searchMovies
-    );
-  $("addMovieButton")
-    .addEventListener(
-      "click",
-      addMovie
-    );
-  document.addEventListener(
+
+
+  /* SZUKAJ */
+
+  $("searchInput")?.addEventListener(
+    "input",
+    searchMovies
+  );
+
+
+  /* DODAWANIE */
+
+  $("addMovieButton")?.addEventListener(
     "click",
+    addMovie
+  );
+}
+
+
+/* =========================================================
+   ENTER W FORMULARZACH
+   ========================================================= */
+
+function setupFormKeyboard() {
+  $("loginPassword")?.addEventListener(
+    "keydown",
     event => {
-      const movieCard =
-        event.target.closest(
-          "[data-movie-id]"
-        );
-      if (!movieCard) {
-        return;
+      if (event.key === "Enter") {
+        login();
       }
-      openMovie(
-        movieCard.dataset.movieId
-      );
+    }
+  );
+
+  $("registerPassword")?.addEventListener(
+    "keydown",
+    event => {
+      if (event.key === "Enter") {
+        createAccount();
+      }
+    }
+  );
+
+  $("searchInput")?.addEventListener(
+    "keydown",
+    event => {
+      if (event.key === "Escape") {
+        closeScreen();
+      }
     }
   );
 }
-/* =========================
-   OCHRONA PRZED ZOOM
-========================= */
+
+
+/* =========================================================
+   BLOKADA ZOOMU / PODWÓJNEGO TAPNIĘCIA
+   ========================================================= */
+
 document.addEventListener(
   "dblclick",
   event => {
     event.preventDefault();
   },
-  { passive: false }
+  {
+    passive: false
+  }
 );
+
 document.addEventListener(
   "gesturestart",
   event => {
     event.preventDefault();
   },
-  { passive: false }
+  {
+    passive: false
+  }
 );
+
 document.addEventListener(
   "gesturechange",
   event => {
     event.preventDefault();
   },
-  { passive: false }
+  {
+    passive: false
+  }
 );
+
 document.addEventListener(
   "gestureend",
   event => {
     event.preventDefault();
   },
-  { passive: false }
-);
-/* =========================
-   START
-========================= */
-document.addEventListener(
-  "DOMContentLoaded",
-  () => {
-    setupEvents();
-    renderMovies();
-    updateProfile();
-    updatePremium();
+  {
+    passive: false
   }
 );
+
+
+/* =========================================================
+   START
+   ========================================================= */
+
+function initFilmApp() {
+  console.log("FILMAPP uruchomiony");
+
+  setupEvents();
+  setupMovieClicks();
+  setupFormKeyboard();
+
+  renderMovies();
+  updateProfile();
+  updatePremium();
+}
+
+
+/*
+  Ponieważ app.js jest ładowany na końcu index.html,
+  DOM może być już gotowy. Obsługujemy oba przypadki.
+*/
+
+if (document.readyState === "loading") {
+  document.addEventListener(
+    "DOMContentLoaded",
+    initFilmApp,
+    {
+      once: true
+    }
+  );
+} else {
+  initFilmApp();
+}
