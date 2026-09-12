@@ -2,10 +2,18 @@
 <html lang="pl">
 <head>
   <meta charset="UTF-8">
+
   <meta name="viewport"
-        content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+        content="width=device-width,
+        initial-scale=1,
+        maximum-scale=1,
+        user-scalable=no,
+        viewport-fit=cover">
+
   <meta name="theme-color" content="#09060f">
+
   <title>FilmApp</title>
+
   <link rel="stylesheet" href="style.css">
 </head>
 
@@ -15,94 +23,162 @@
 
   <header class="topbar">
     <div class="logo">FILM<span>APP</span></div>
-    <button class="icon-btn" onclick="openProfile()">👤</button>
+
+    <button class="icon-btn" id="profileTopButton">
+      👤
+    </button>
   </header>
 
-  <main id="main">
+
+  <main id="homePage">
 
     <section class="hero">
       <div class="hero-content">
+
         <span class="badge">⭐ POLECANY</span>
+
         <h1>Twój świat<br>filmów</h1>
-        <p>Oglądaj, oceniaj i odkrywaj nowe historie.</p>
-        <button class="primary" onclick="openMovie('action')">
+
+        <p>
+          Oglądaj, oceniaj i odkrywaj nowe historie.
+        </p>
+
+        <button class="primary" id="heroWatch">
           ▶ Oglądaj teraz
         </button>
+
       </div>
     </section>
 
+
     <section>
+
       <div class="section-title">
         <h2>Kontynuuj oglądanie</h2>
-        <button onclick="openLibrary()">Więcej</button>
+        <button id="continueMore">Więcej</button>
       </div>
 
       <div class="movie-row" id="continueRow"></div>
+
     </section>
 
+
     <section>
+
       <div class="section-title">
         <h2>Kategorie</h2>
       </div>
 
       <div class="categories">
-        <button onclick="filterMovies('Wszystkie')">🎬 Wszystkie</button>
-        <button onclick="filterMovies('Sport / Walki')">🥊 Sport / Walki</button>
-        <button onclick="filterMovies('Horror')">👻 Horror</button>
-        <button onclick="filterMovies('Akcja')">🔥 Akcja</button>
-        <button onclick="filterMovies('Komedia')">😂 Komedia</button>
-        <button onclick="filterMovies('Thriller')">🕵️ Thriller</button>
-        <button onclick="filterMovies('Sci-Fi')">🚀 Sci-Fi</button>
-        <button onclick="filterMovies('Dramat')">🎭 Dramat</button>
-        <button onclick="filterMovies('Romans')">❤️ Romans</button>
+
+        <button data-category="Wszystkie">
+          🎬 Wszystkie
+        </button>
+
+        <button data-category="Sport / Walki">
+          🥊 Sport / Walki
+        </button>
+
+        <button data-category="Horror">
+          👻 Horror
+        </button>
+
+        <button data-category="Akcja">
+          🔥 Akcja
+        </button>
+
+        <button data-category="Komedia">
+          😂 Komedia
+        </button>
+
+        <button data-category="Thriller">
+          🕵️ Thriller
+        </button>
+
+        <button data-category="Sci-Fi">
+          🚀 Sci-Fi
+        </button>
+
+        <button data-category="Dramat">
+          🎭 Dramat
+        </button>
+
+        <button data-category="Romans">
+          ❤️ Romans
+        </button>
+
       </div>
+
     </section>
 
+
     <section>
+
       <div class="section-title">
         <h2>Dla Ciebie</h2>
       </div>
 
       <div class="movie-row" id="movieRow"></div>
+
     </section>
 
+
     <section>
+
       <div class="section-title">
         <h2>Najlepiej oceniane</h2>
       </div>
 
       <div class="movie-row" id="topRow"></div>
+
     </section>
 
+
     <section class="premium-card">
+
       <span class="badge">💎 PREMIUM</span>
+
       <h2>Oglądaj bez ograniczeń</h2>
-      <p>Full HD, 4K, brak reklam i dostęp do całej biblioteki.</p>
-      <button class="primary" onclick="openPremium()">
+
+      <p>
+        4K, brak reklam i dostęp do całej biblioteki.
+      </p>
+
+      <button class="primary" id="premiumHomeButton">
         Zobacz pakiety
       </button>
+
     </section>
 
   </main>
 
+
   <nav class="bottom-nav">
-    <button class="nav active" onclick="goHome()">
-      🏠<small>Główna</small>
+
+    <button class="nav active" id="navHome">
+      🏠
+      <small>Główna</small>
     </button>
 
-    <button class="nav" onclick="openSearch()">
-      🔍<small>Szukaj</small>
+    <button class="nav" id="navSearch">
+      🔍
+      <small>Szukaj</small>
     </button>
 
-    <button class="nav add" onclick="openAdd()">＋</button>
-
-    <button class="nav" onclick="openLibrary()">
-      📚<small>Biblioteka</small>
+    <button class="nav add" id="navAdd">
+      ＋
     </button>
 
-    <button class="nav" onclick="openProfile()">
-      👤<small>Profil</small>
+    <button class="nav" id="navLibrary">
+      📚
+      <small>Biblioteka</small>
     </button>
+
+    <button class="nav" id="navProfile">
+      👤
+      <small>Profil</small>
+    </button>
+
   </nav>
 
 </div>
@@ -112,57 +188,78 @@
 
 <div id="movieScreen" class="screen hidden">
 
-  <button class="back" onclick="closeScreen()">‹</button>
+  <button class="back" id="movieBack">‹</button>
 
   <div class="video-player">
+
     <video id="videoPlayer"
            controls
            playsinline
            preload="metadata">
     </video>
+
   </div>
 
   <div class="screen-content">
 
     <div class="movie-meta">
+
       <span id="movieQuality">4K</span>
-      <span id="movieRating">⭐ 8.7</span>
-      <span id="movieDuration">1h 48min</span>
+
+      <span id="movieRating">
+        ⭐ 8.7
+      </span>
+
+      <span id="movieDuration">
+        1h 48min
+      </span>
+
     </div>
 
-    <h1 id="movieTitle">Film</h1>
+
+    <h1 id="movieTitle">
+      Film
+    </h1>
+
 
     <div class="actions">
-      <button class="primary" onclick="playMovie()">
+
+      <button class="primary" id="playMovieButton">
         ▶ Odtwórz
       </button>
 
-      <button class="secondary" onclick="toggleFavorite()">
+      <button class="secondary" id="favoriteButton">
         ♡ Biblioteka
       </button>
+
     </div>
+
 
     <h3>Opis</h3>
 
     <p id="movieDescription"></p>
 
+
     <h3>Kategoria</h3>
 
     <p id="movieCategory"></p>
 
+
     <h3>Twoja ocena</h3>
 
-    <div class="rating" id="ratingButtons">
-      <button onclick="rateMovie(1)">1</button>
-      <button onclick="rateMovie(2)">2</button>
-      <button onclick="rateMovie(3)">3</button>
-      <button onclick="rateMovie(4)">4</button>
-      <button onclick="rateMovie(5)">5</button>
-      <button onclick="rateMovie(6)">6</button>
-      <button onclick="rateMovie(7)">7</button>
-      <button onclick="rateMovie(8)">8</button>
-      <button onclick="rateMovie(9)">9</button>
-      <button onclick="rateMovie(10)">10</button>
+    <div class="rating">
+
+      <button data-rating="1">1</button>
+      <button data-rating="2">2</button>
+      <button data-rating="3">3</button>
+      <button data-rating="4">4</button>
+      <button data-rating="5">5</button>
+      <button data-rating="6">6</button>
+      <button data-rating="7">7</button>
+      <button data-rating="8">8</button>
+      <button data-rating="9">9</button>
+      <button data-rating="10">10</button>
+
     </div>
 
   </div>
@@ -174,34 +271,41 @@
 
 <div id="loginScreen" class="screen hidden">
 
-  <button class="back" onclick="closeScreen()">‹</button>
+  <button class="back" id="loginBack">‹</button>
 
   <div class="auth">
 
-    <div class="logo big">FILM<span>APP</span></div>
+    <div class="logo big">
+      FILM<span>APP</span>
+    </div>
 
     <h1>Zaloguj się</h1>
-    <p>Wejdź na swoje konto.</p>
 
-    <input id="loginEmail"
-           type="email"
-           autocomplete="email"
-           placeholder="Adres e-mail">
+    <p>
+      Wejdź na swoje konto.
+    </p>
 
-    <input id="loginPassword"
-           type="password"
-           autocomplete="current-password"
-           placeholder="Hasło">
+    <input
+      id="loginEmail"
+      type="email"
+      autocomplete="email"
+      placeholder="Adres e-mail">
 
-    <button class="primary full" onclick="login()">
+    <input
+      id="loginPassword"
+      type="password"
+      autocomplete="current-password"
+      placeholder="Hasło">
+
+    <button class="primary full" id="loginButton">
       Zaloguj się
     </button>
 
-    <button class="text-btn" onclick="forgotPassword()">
+    <button class="text-btn" id="forgotButton">
       Nie pamiętasz hasła?
     </button>
 
-    <button class="secondary full" onclick="register()">
+    <button class="secondary full" id="registerButton">
       Utwórz konto
     </button>
 
@@ -214,33 +318,42 @@
 
 <div id="registerScreen" class="screen hidden">
 
-  <button class="back" onclick="closeScreen()">‹</button>
+  <button class="back" id="registerBack">‹</button>
 
   <div class="auth">
 
-    <div class="logo big">FILM<span>APP</span></div>
+    <div class="logo big">
+      FILM<span>APP</span>
+    </div>
 
     <h1>Utwórz konto</h1>
 
-    <input id="registerName"
-           type="text"
-           placeholder="Nazwa użytkownika">
+    <p>
+      Załóż swoje konto FilmApp.
+    </p>
 
-    <input id="registerEmail"
-           type="email"
-           autocomplete="email"
-           placeholder="Adres e-mail">
+    <input
+      id="registerName"
+      type="text"
+      placeholder="Nazwa użytkownika">
 
-    <input id="registerPassword"
-           type="password"
-           autocomplete="new-password"
-           placeholder="Hasło">
+    <input
+      id="registerEmail"
+      type="email"
+      autocomplete="email"
+      placeholder="Adres e-mail">
 
-    <button class="primary full" onclick="createAccount()">
+    <input
+      id="registerPassword"
+      type="password"
+      autocomplete="new-password"
+      placeholder="Hasło">
+
+    <button class="primary full" id="createAccountButton">
       Zarejestruj się
     </button>
 
-    <button class="text-btn" onclick="openLogin()">
+    <button class="text-btn" id="goLoginButton">
       Mam już konto
     </button>
 
@@ -253,43 +366,49 @@
 
 <div id="profileScreen" class="screen hidden">
 
-  <button class="back" onclick="closeScreen()">‹</button>
+  <button class="back" id="profileBack">‹</button>
 
   <div class="profile">
 
-    <div class="avatar" id="avatar">👤</div>
+    <div class="avatar">
+      👤
+    </div>
 
-    <h1 id="profileName">Gość</h1>
+    <h1 id="profileName">
+      Gość
+    </h1>
 
     <p id="profileEmail">
       Nie jesteś zalogowany
     </p>
 
+
     <div id="profileLoggedOut">
 
-      <button class="primary full" onclick="openLogin()">
+      <button class="primary full" id="profileLogin">
         Zaloguj się
       </button>
 
     </div>
 
+
     <div id="profileLoggedIn" class="hidden">
 
       <div class="profile-menu">
 
-        <button onclick="openLibrary()">
+        <button id="profileLibrary">
           📚 Moja biblioteka
         </button>
 
-        <button onclick="openPremium()">
+        <button id="profilePremium">
           💎 Premium
         </button>
 
-        <button onclick="forgotPassword()">
+        <button id="profileReset">
           🔐 Reset hasła
         </button>
 
-        <button onclick="logout()">
+        <button id="profileLogout">
           🚪 Wyloguj
         </button>
 
@@ -306,16 +425,26 @@
 
 <div id="libraryScreen" class="screen hidden">
 
-  <button class="back" onclick="closeScreen()">‹</button>
+  <button class="back" id="libraryBack">‹</button>
 
   <div class="screen-content">
 
     <h1>Biblioteka</h1>
 
     <div class="library-tabs">
-      <button onclick="showLibrary('favorites')">❤️ Ulubione</button>
-      <button onclick="showLibrary('history')">🕐 Historia</button>
-      <button onclick="showLibrary('continue')">▶ Kontynuuj</button>
+
+      <button data-library="favorites">
+        ❤️ Ulubione
+      </button>
+
+      <button data-library="history">
+        🕐 Historia
+      </button>
+
+      <button data-library="continue">
+        ▶ Kontynuuj
+      </button>
+
     </div>
 
     <div id="libraryMovies"></div>
@@ -329,15 +458,18 @@
 
 <div id="premiumScreen" class="screen hidden">
 
-  <button class="back" onclick="closeScreen()">‹</button>
+  <button class="back" id="premiumBack">‹</button>
 
   <div class="screen-content">
 
-    <span class="badge">💎 PREMIUM</span>
+    <span class="badge">
+      💎 PREMIUM
+    </span>
 
     <h1>Wybierz pakiet</h1>
 
     <div id="currentPlan"></div>
+
 
     <div class="plans">
 
@@ -345,9 +477,13 @@
 
         <h2>Free</h2>
 
-        <p>Podstawowy dostęp</p>
+        <p>
+          Podstawowy dostęp
+        </p>
 
-        <strong>0 zł</strong>
+        <strong>
+          0 zł
+        </strong>
 
         <button class="secondary full">
           Aktualny plan
@@ -360,21 +496,27 @@
 
         <h2>Premium</h2>
 
-        <p>Full HD · Bez reklam</p>
+        <p>
+          Full HD · Bez reklam
+        </p>
 
-        <strong>19,99 zł / miesiąc</strong>
+        <strong>
+          19,99 zł / miesiąc
+        </strong>
 
         <button class="primary full"
-                onclick="buyPlan('Premium', 30)">
+                data-buy="Premium"
+                data-days="30">
           Kup Premium
         </button>
 
         <div class="voucher">
 
-          <input id="premiumCode"
-                 placeholder="Kod bonu">
+          <input
+            id="premiumCode"
+            placeholder="Kod bonu">
 
-          <button onclick="activateVoucher('premium')">
+          <button data-voucher="premium">
             Aktywuj
           </button>
 
@@ -387,21 +529,27 @@
 
         <h2>Premium 4K</h2>
 
-        <p>4K · Bez reklam · Premium</p>
+        <p>
+          4K · Bez reklam
+        </p>
 
-        <strong>29,99 zł / miesiąc</strong>
+        <strong>
+          29,99 zł / miesiąc
+        </strong>
 
         <button class="primary full"
-                onclick="buyPlan('Premium 4K', 30)">
+                data-buy="Premium 4K"
+                data-days="30">
           Kup 4K
         </button>
 
         <div class="voucher">
 
-          <input id="premium4kCode"
-                 placeholder="Kod bonu">
+          <input
+            id="premium4kCode"
+            placeholder="Kod bonu">
 
-          <button onclick="activateVoucher('4k')">
+          <button data-voucher="4k">
             Aktywuj
           </button>
 
@@ -414,37 +562,33 @@
 
         <h2>Premium na zawsze</h2>
 
-        <p>Pełny dostęp bez terminu.</p>
+        <p>
+          Pełny dostęp bez terminu.
+        </p>
 
-        <strong>199,99 zł</strong>
+        <strong>
+          199,99 zł
+        </strong>
 
         <button class="primary full"
-                onclick="buyPlan('Premium na zawsze', 0)">
+                data-buy="Premium na zawsze"
+                data-days="0">
           Kup na zawsze
         </button>
 
         <div class="voucher">
 
-          <input id="lifetimeCode"
-                 placeholder="Kod bonu">
+          <input
+            id="lifetimeCode"
+            placeholder="Kod bonu">
 
-          <button onclick="activateVoucher('lifetime')">
+          <button data-voucher="lifetime">
             Aktywuj
           </button>
 
         </div>
 
       </div>
-
-    </div>
-
-    <div class="voucher-info">
-
-      <h3>🎁 Masz bon?</h3>
-
-      <p>
-        Wpisz kod przypisany do konkretnego pakietu.
-      </p>
 
     </div>
 
@@ -457,17 +601,17 @@
 
 <div id="searchScreen" class="screen hidden">
 
-  <button class="back" onclick="closeScreen()">‹</button>
+  <button class="back" id="searchBack">‹</button>
 
   <div class="screen-content">
 
     <h1>Szukaj</h1>
 
-    <input class="search-input"
-           id="searchInput"
-           type="search"
-           placeholder="Szukaj filmu..."
-           oninput="searchMovies()">
+    <input
+      class="search-input"
+      id="searchInput"
+      type="search"
+      placeholder="Szukaj filmu...">
 
     <div id="searchResults"></div>
 
@@ -480,41 +624,46 @@
 
 <div id="addScreen" class="screen hidden">
 
-  <button class="back" onclick="closeScreen()">‹</button>
+  <button class="back" id="addBack">‹</button>
 
   <div class="screen-content">
 
     <h1>Dodaj film</h1>
 
     <p>
-      Dodajemy tutaj własne filmy do testowej biblioteki.
+      Dodaj film do lokalnej wersji biblioteki.
     </p>
 
-    <input id="addTitle"
-           type="text"
-           placeholder="Tytuł filmu">
+    <input
+      id="addTitle"
+      type="text"
+      placeholder="Tytuł filmu">
 
-    <textarea id="addDescription"
-              placeholder="Opis filmu"></textarea>
+    <textarea
+      id="addDescription"
+      placeholder="Opis filmu"></textarea>
 
-    <input id="addCategory"
-           type="text"
-           placeholder="Kategoria">
+    <input
+      id="addCategory"
+      type="text"
+      placeholder="Kategoria">
 
-    <input id="addDuration"
-           type="text"
-           placeholder="Czas, np. 1h 40min">
+    <input
+      id="addDuration"
+      type="text"
+      placeholder="Czas, np. 1h 40min">
 
-    <input id="addQuality"
-           type="text"
-           placeholder="Jakość, np. HD lub 4K">
+    <input
+      id="addQuality"
+      type="text"
+      placeholder="Jakość, np. HD lub 4K">
 
-    <input id="addVideo"
-           type="url"
-           placeholder="Adres filmu MP4">
+    <input
+      id="addVideo"
+      type="url"
+      placeholder="Adres filmu MP4">
 
-    <button class="primary full"
-            onclick="addMovie()">
+    <button class="primary full" id="addMovieButton">
       Dodaj film
     </button>
 
