@@ -1,888 +1,407 @@
 "use strict";
 
-/*
-=========================================================
- FILMAPP
- WERSJA DEMO / GITHUB PAGES
-
- ADMIN:
- Login: Admin2012
- Hasło: 2012
-
- Filmy i plakaty:
- IndexedDB
-
- Konta / ustawienia:
- localStorage
-
- UWAGA:
- To nadal jest wersja lokalna.
- Prawdziwe bezpieczne konto administratora wymaga backendu.
-=========================================================
-*/
+/* =========================================================
+   FILMAPP
+   SYSTEM KONT ADMIN / USER
+   WERSJA DEMO - localStorage
+   ========================================================= */
 
 
-/* =====================================================
-   ADMIN
-===================================================== */
+/* =========================================================
+   FILMY STARTOWE
+   ========================================================= */
 
-const ADMIN_LOGIN = "Admin2012";
-const ADMIN_PASSWORD = "2012";
+const movies = [
+  {
+    id: "fight",
+    title: "Ostatnia walka",
+    category: "Sport / Walki",
+    rating: 8.7,
+    duration: "1h 48min",
+    quality: "4K",
+    description: "Zawodnik dostaje ostatnią szansę na powrót na szczyt.",
+    poster: "poster1",
+    video: "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4"
+  },
+
+  {
+    id: "horror",
+    title: "Noc bez końca",
+    category: "Horror",
+    rating: 8.1,
+    duration: "1h 36min",
+    quality: "HD",
+    description: "Grupa przyjaciół odkrywa miejsce, z którego nie da się łatwo wydostać.",
+    poster: "poster2",
+    video: "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4"
+  },
+
+  {
+    id: "action",
+    title: "Ostatnia misja",
+    category: "Akcja",
+    rating: 9.0,
+    duration: "2h 04min",
+    quality: "4K",
+    description: "Agent otrzymuje zadanie, które zmieni całe jego życie.",
+    poster: "poster3",
+    video: "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4"
+  },
+
+  {
+    id: "space",
+    title: "Poza gwiazdami",
+    category: "Sci-Fi",
+    rating: 8.9,
+    duration: "2h 12min",
+    quality: "4K",
+    description: "Załoga statku kosmicznego odkrywa coś, czego nie powinno być w kosmosie.",
+    poster: "poster4",
+    video: "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4"
+  },
+
+  {
+    id: "shadow",
+    title: "Cień miasta",
+    category: "Thriller",
+    rating: 8.5,
+    duration: "1h 55min",
+    quality: "4K",
+    description: "Tajemnicze wydarzenia prowadzą detektywa do ukrytej prawdy.",
+    poster: "poster5",
+    video: "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4"
+  },
+
+  {
+    id: "comedy",
+    title: "Nieplanowana podróż",
+    category: "Komedia",
+    rating: 7.9,
+    duration: "1h 42min",
+    quality: "HD",
+    description: "Zwykła podróż zamienia się w serię absurdalnych wydarzeń.",
+    poster: "poster6",
+    video: "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4"
+  }
+];
 
 
-/* =====================================================
-   STORAGE
-===================================================== */
+/* =========================================================
+   DOM
+   ========================================================= */
 
-const STORAGE = {
-  accounts: "filmapp_accounts_v5",
-  session: "filmapp_session_v5",
-  movies: "filmapp_movies_v5",
-  userData: "filmapp_user_data_v5"
+function $(id) {
+  return document.getElementById(id);
+}
+
+
+/* =========================================================
+   POMOCNICZE
+   ========================================================= */
+
+function escapeHTML(value) {
+  return String(value ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
+
+function toast(message) {
+  const element = $("toast");
+
+  if (!element) return;
+
+  element.textContent = message;
+  element.classList.add("show");
+
+  clearTimeout(window.filmappToastTimer);
+
+  window.filmappToastTimer = setTimeout(() => {
+    element.classList.remove("show");
+  }, 2500);
+}
+
+
+function randomId(prefix = "id") {
+  return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+}
+
+
+/* =========================================================
+   HASH HASŁA
+   Nie zapisujemy hasła jako zwykły tekst.
+   Nadal NIE jest to pełne zabezpieczenie produkcyjne.
+   ========================================================= */
+
+async function hashPassword(password) {
+  const data = new TextEncoder().encode(password);
+
+  const hash = await crypto.subtle.digest(
+    "SHA-256",
+    data
+  );
+
+  return Array.from(new Uint8Array(hash))
+    .map(byte => byte.toString(16).padStart(2, "0"))
+    .join("");
+}
+
+
+/* =========================================================
+   BAZA DEMO
+   ========================================================= */
+
+const DEFAULT_DB = {
+  accounts: [],
+  currentUserId: null,
+  customMovies: [],
+  comments: {},
+  usedVouchers: [],
+  progress: {}
 };
 
 
-/* =====================================================
-   INDEXED DB
-===================================================== */
-
-const DB_NAME = "FilmAppDatabase";
-const DB_VERSION = 1;
-
-let db = null;
-
-const posterURLCache = new Map();
-const videoURLCache = new Map();
-
-
-function openDatabase() {
-
-  return new Promise((resolve, reject) => {
-
-    const request =
-      indexedDB.open(DB_NAME, DB_VERSION);
-
-    request.onupgradeneeded = event => {
-
-      const database = event.target.result;
-
-      if (!database.objectStoreNames.contains("files")) {
-
-        database.createObjectStore(
-          "files",
-          { keyPath: "id" }
-        );
-
-      }
-
-    };
-
-    request.onsuccess = event => {
-
-      db = event.target.result;
-      resolve(db);
-
-    };
-
-    request.onerror = () => {
-
-      reject(request.error);
-
-    };
-
-  });
-
-}
-
-
-function saveFileToDB(file) {
-
-  return new Promise((resolve, reject) => {
-
-    if (!db) {
-
-      reject(
-        new Error("Baza danych nie jest gotowa.")
-      );
-
-      return;
-
-    }
-
-    const id =
-      "file_" +
-      Date.now() +
-      "_" +
-      Math.random()
-        .toString(36)
-        .slice(2);
-
-
-    const transaction =
-      db.transaction(
-        "files",
-        "readwrite"
-      );
-
-    const store =
-      transaction.objectStore("files");
-
-
-    store.put({
-
-      id,
-      blob: file,
-      name: file.name,
-      type: file.type,
-      createdAt: Date.now()
-
-    });
-
-
-    transaction.oncomplete = () => {
-
-      resolve(id);
-
-    };
-
-
-    transaction.onerror = () => {
-
-      reject(transaction.error);
-
-    };
-
-  });
-
-}
-
-
-function getFileFromDB(id) {
-
-  return new Promise((resolve, reject) => {
-
-    if (!db) {
-
-      resolve(null);
-      return;
-
-    }
-
-    const transaction =
-      db.transaction(
-        "files",
-        "readonly"
-      );
-
-    const store =
-      transaction.objectStore("files");
-
-    const request =
-      store.get(id);
-
-
-    request.onsuccess = () => {
-
-      resolve(
-        request.result || null
-      );
-
-    };
-
-
-    request.onerror = () => {
-
-      reject(request.error);
-
-    };
-
-  });
-
-}
-
-
-function deleteFileFromDB(id) {
-
-  if (!id || !db) {
-    return;
-  }
-
+function loadDB() {
   try {
+    const saved = localStorage.getItem("filmapp_database");
 
-    const transaction =
-      db.transaction(
-        "files",
-        "readwrite"
-      );
+    if (!saved) {
+      return JSON.parse(JSON.stringify(DEFAULT_DB));
+    }
 
-    transaction
-      .objectStore("files")
-      .delete(id);
+    const parsed = JSON.parse(saved);
 
+    return {
+      ...DEFAULT_DB,
+      ...parsed,
+      accounts: Array.isArray(parsed.accounts)
+        ? parsed.accounts
+        : [],
+
+      customMovies: Array.isArray(parsed.customMovies)
+        ? parsed.customMovies
+        : [],
+
+      comments: parsed.comments || {},
+
+      usedVouchers: Array.isArray(parsed.usedVouchers)
+        ? parsed.usedVouchers
+        : [],
+
+      progress: parsed.progress || {}
+    };
   } catch (error) {
-
     console.error(error);
 
+    return JSON.parse(JSON.stringify(DEFAULT_DB));
   }
-
 }
 
 
-async function getPosterURL(movie) {
+let db = loadDB();
 
-  if (!movie) {
-    return "";
-  }
 
-
-  /* Nowy sposób */
-
-  if (movie.posterKey) {
-
-    if (posterURLCache.has(movie.posterKey)) {
-
-      return posterURLCache.get(
-        movie.posterKey
-      );
-
-    }
-
-
-    const stored =
-      await getFileFromDB(
-        movie.posterKey
-      );
-
-
-    if (stored?.blob) {
-
-      const url =
-        URL.createObjectURL(
-          stored.blob
-        );
-
-      posterURLCache.set(
-        movie.posterKey,
-        url
-      );
-
-      return url;
-
-    }
-
-  }
-
-
-  /* Stary sposób - kompatybilność */
-
-  if (movie.poster) {
-
-    return movie.poster;
-
-  }
-
-
-  return "";
-
-}
-
-
-async function getVideoURL(movie) {
-
-  if (!movie) {
-    return "";
-  }
-
-
-  if (movie.videoKey) {
-
-    if (videoURLCache.has(movie.videoKey)) {
-
-      return videoURLCache.get(
-        movie.videoKey
-      );
-
-    }
-
-
-    const stored =
-      await getFileFromDB(
-        movie.videoKey
-      );
-
-
-    if (stored?.blob) {
-
-      const url =
-        URL.createObjectURL(
-          stored.blob
-        );
-
-      videoURLCache.set(
-        movie.videoKey,
-        url
-      );
-
-      return url;
-
-    }
-
-  }
-
-
-  /* Kompatybilność ze starymi filmami */
-
-  if (movie.videoData) {
-
-    return movie.videoData;
-
-  }
-
-
-  return "";
-
-}
-
-
-/* =====================================================
-   DANE
-===================================================== */
-
-let movies = JSON.parse(
-  localStorage.getItem(
-    STORAGE.movies
-  ) || "[]"
-);
-
-let accounts = JSON.parse(
-  localStorage.getItem(
-    STORAGE.accounts
-  ) || "[]"
-);
-
-let userData = JSON.parse(
-  localStorage.getItem(
-    STORAGE.userData
-  ) || "{}"
-);
-
-let currentUser = JSON.parse(
-  localStorage.getItem(
-    STORAGE.session
-  ) || "null"
-);
-
-let currentMovie = null;
-
-
-/* =====================================================
-   DOM
-===================================================== */
-
-const $ = id =>
-  document.getElementById(id);
-
-
-let loadingScreen;
-let loadingProgress;
-
-let movieScreen;
-let loginScreen;
-let registerScreen;
-let profileScreen;
-let libraryScreen;
-let premiumScreen;
-let searchScreen;
-let addScreen;
-
-let videoPlayer;
-
-
-/* =====================================================
-   ZAPIS
-===================================================== */
-
-function saveAccounts() {
-
-  localStorage.setItem(
-    STORAGE.accounts,
-    JSON.stringify(accounts)
-  );
-
-}
-
-
-function saveMovies() {
-
-  localStorage.setItem(
-    STORAGE.movies,
-    JSON.stringify(movies)
-  );
-
-}
-
-
-function saveUserData() {
-
-  localStorage.setItem(
-    STORAGE.userData,
-    JSON.stringify(userData)
-  );
-
-}
-
-
-function saveSession() {
-
-  if (currentUser) {
-
+function saveDB() {
+  try {
     localStorage.setItem(
-      STORAGE.session,
-      JSON.stringify(currentUser)
+      "filmapp_database",
+      JSON.stringify(db)
     );
-
-  } else {
-
-    localStorage.removeItem(
-      STORAGE.session
-    );
-
+  } catch (error) {
+    console.error(error);
+    toast("Nie udało się zapisać danych.");
   }
-
 }
 
 
-/* =====================================================
-   USER DATA
-===================================================== */
+/* =========================================================
+   AKTUALNY UŻYTKOWNIK
+   ========================================================= */
 
-function createUserData(userId) {
-
-  if (!userData[userId]) {
-
-    userData[userId] = {
-
-      favorites: [],
-      history: [],
-      progress: {},
-      ratings: {},
-      comments: {},
-
-      premium: {
-        plan: "Basic",
-        expires: null
-      }
-
-    };
-
-    saveUserData();
-
-  }
-
-
-  return userData[userId];
-
-}
-
-
-function getMyData() {
-
-  if (!currentUser) {
+function currentUser() {
+  if (!db.currentUserId) {
     return null;
   }
 
-  return createUserData(
-    currentUser.id
-  );
-
+  return db.accounts.find(
+    account => account.id === db.currentUserId
+  ) || null;
 }
 
 
-/* =====================================================
-   TOAST
-===================================================== */
-
-let toastTimer;
-
-function toast(message) {
-
-  const element =
-    $("toast");
-
-  if (!element) {
-    return;
-  }
-
-  element.textContent =
-    message;
-
-  element.classList.add(
-    "show"
-  );
-
-  clearTimeout(
-    toastTimer
-  );
-
-  toastTimer =
-    setTimeout(() => {
-
-      element.classList.remove(
-        "show"
-      );
-
-    }, 2600);
-
+function isLoggedIn() {
+  return !!currentUser();
 }
 
-
-/* =====================================================
-   LOADING
-===================================================== */
-
-function startLoading() {
-
-  loadingScreen =
-    $("loadingScreen");
-
-  loadingProgress =
-    $("loadingProgress");
-
-
-  if (!loadingScreen) {
-    return;
-  }
-
-
-  let progress = 0;
-
-
-  const timer =
-    setInterval(() => {
-
-      progress +=
-        Math.floor(
-          Math.random() * 12
-        ) + 5;
-
-
-      if (progress >= 100) {
-
-        progress = 100;
-
-        clearInterval(
-          timer
-        );
-
-
-        setTimeout(() => {
-
-          loadingScreen
-            .classList
-            .add(
-              "loading-hide"
-            );
-
-
-          setTimeout(() => {
-
-            loadingScreen.remove();
-
-          }, 700);
-
-        }, 350);
-
-      }
-
-
-      if (loadingProgress) {
-
-        loadingProgress.style.width =
-          progress + "%";
-
-      }
-
-    }, 120);
-
-}
-
-
-/* =====================================================
-   SCREENY
-===================================================== */
-
-function hideAllScreens() {
-
-  [
-    movieScreen,
-    loginScreen,
-    registerScreen,
-    profileScreen,
-    libraryScreen,
-    premiumScreen,
-    searchScreen,
-    addScreen
-
-  ].forEach(screen => {
-
-    if (screen) {
-
-      screen.classList.add(
-        "hidden"
-      );
-
-    }
-
-  });
-
-}
-
-
-function showScreen(screen) {
-
-  hideAllScreens();
-
-
-  if (screen) {
-
-    screen.classList.remove(
-      "hidden"
-    );
-
-  }
-
-
-  window.scrollTo(
-    0,
-    0
-  );
-
-}
-
-
-/* =====================================================
-   ADMIN
-===================================================== */
 
 function isAdmin() {
+  const user = currentUser();
 
-  return !!(
-    currentUser &&
-    currentUser.role === "admin"
-  );
-
+  return !!user && user.role === "admin";
 }
 
 
-function updateAdminUI() {
+/* =========================================================
+   DANE UŻYTKOWNIKA
+   ========================================================= */
 
-  const addButton =
-    $("navAdd");
+function createUserData() {
+  return {
+    favorites: [],
+    history: [],
+    ratings: {},
+    premium: {
+      plan: "Free",
+      expires: null
+    }
+  };
+}
 
 
-  if (!addButton) {
+function ensureUserData(user) {
+  if (!user) return;
+
+  if (!Array.isArray(user.favorites)) {
+    user.favorites = [];
+  }
+
+  if (!Array.isArray(user.history)) {
+    user.history = [];
+  }
+
+  if (!user.ratings || typeof user.ratings !== "object") {
+    user.ratings = {};
+  }
+
+  if (!user.premium) {
+    user.premium = {
+      plan: "Free",
+      expires: null
+    };
+  }
+}
+
+
+function saveCurrentUser() {
+  const user = currentUser();
+
+  if (!user) return;
+
+  ensureUserData(user);
+  saveDB();
+}
+
+
+/* =========================================================
+   FILMY
+   ========================================================= */
+
+function allMovies() {
+  return [
+    ...movies,
+    ...db.customMovies
+  ];
+}
+
+
+function getMovie(id) {
+  return allMovies().find(
+    movie => movie.id === id
+  );
+}
+
+
+/* =========================================================
+   EKRANY
+   ========================================================= */
+
+function showScreen(id) {
+  document
+    .querySelectorAll(".screen")
+    .forEach(screen => {
+      screen.classList.add("hidden");
+    });
+
+  const screen = $(id);
+
+  if (!screen) {
+    console.error("Brak ekranu:", id);
     return;
   }
 
+  screen.classList.remove("hidden");
+  screen.scrollTop = 0;
 
-  if (isAdmin()) {
-
-    addButton.classList.remove(
-      "hidden"
-    );
-
-  } else {
-
-    addButton.classList.add(
-      "hidden"
-    );
-
-  }
-
+  document.body.style.overflow = "hidden";
 }
 
 
-/* =====================================================
-   PROFIL
-===================================================== */
+function closeScreen() {
+  document
+    .querySelectorAll(".screen")
+    .forEach(screen => {
+      screen.classList.add("hidden");
+    });
 
-function updateProfile() {
+  const video = $("videoPlayer");
 
-  const name =
-    $("profileName");
-
-  const email =
-    $("profileEmail");
-
-  const loggedOut =
-    $("profileLoggedOut");
-
-  const loggedIn =
-    $("profileLoggedIn");
-
-
-  if (!currentUser) {
-
-    if (name) {
-
-      name.textContent =
-        "Gość";
-
-    }
-
-
-    if (email) {
-
-      email.textContent =
-        "Nie jesteś zalogowany";
-
-    }
-
-
-    loggedOut?.classList.remove(
-      "hidden"
-    );
-
-    loggedIn?.classList.add(
-      "hidden"
-    );
-
-  } else {
-
-    if (name) {
-
-      name.textContent =
-        currentUser.name;
-
-    }
-
-
-    if (email) {
-
-      if (
-        currentUser.role ===
-        "admin"
-      ) {
-
-        email.textContent =
-          "👑 Administrator FilmApp";
-
-      } else {
-
-        email.textContent =
-          "@" +
-          currentUser.login;
-
-      }
-
-    }
-
-
-    loggedOut?.classList.add(
-      "hidden"
-    );
-
-    loggedIn?.classList.remove(
-      "hidden"
-    );
-
+  if (video) {
+    video.pause();
   }
 
-
-  updateAdminUI();
-
+  document.body.style.overflow = "";
 }
 
 
-/* =====================================================
-   OCENY
-===================================================== */
+function goHome() {
+  closeScreen();
 
-function getMovieRating(movie) {
+  window.scrollTo({
+    top: 0,
+    behavior: "smooth"
+  });
 
-  const ratings =
-    movie?.ratings || [];
-
-
-  if (!ratings.length) {
-    return "—";
-  }
-
-
-  const total =
-    ratings.reduce(
-      (sum, rating) =>
-        sum + Number(rating),
-      0
-    );
-
-
-  return (
-    total /
-    ratings.length
-  ).toFixed(1);
-
+  setActiveNav("navHome");
 }
 
 
-/* =====================================================
-   POSTER
-===================================================== */
+function setActiveNav(id) {
+  document
+    .querySelectorAll(".nav")
+    .forEach(nav => nav.classList.remove("active"));
 
-async function movieCard(movie) {
-
-  const poster =
-    await getPosterURL(movie);
-
-  const access =
-    movie.access || "Basic";
+  $(id)?.classList.add("active");
+}
 
 
-  const accessIcon =
-    access === "Basic"
-      ? "🆓"
-      : access === "Premium"
-        ? "💎"
-        : "💎 4K";
+/* =========================================================
+   KARTY
+   ========================================================= */
 
-
+function createMovieCard(movie) {
   return `
-
     <article
       class="movie-card"
-      data-movie-id="${escapeHTML(movie.id)}">
+      data-movie-id="${escapeHTML(movie.id)}"
+      role="button"
+      tabindex="0">
 
-      <div
-        class="poster"
-        style="${
-          poster
-            ? `background-image:url("${poster}")`
-            : ""
-        }">
-
-        ${
-          !poster
-            ? `
-              <div class="poster-title">
-                ${escapeHTML(movie.title)}
-              </div>
-            `
-            : ""
-        }
+      <div class="poster ${escapeHTML(movie.poster || "poster1")}">
 
         <span class="quality">
-          ${escapeHTML(
-            movie.quality || "HD"
-          )}
+          ${escapeHTML(movie.quality || "HD")}
         </span>
 
-        <span class="movie-access">
-          ${accessIcon}
+        <span class="poster-title">
+          ${escapeHTML(movie.title)}
         </span>
 
-        <div class="play">
+        <span class="play">
           ▶
-        </div>
+        </span>
 
       </div>
 
@@ -891,1888 +410,916 @@ async function movieCard(movie) {
       </h3>
 
       <p>
-        ⭐ ${getMovieRating(movie)}
-        · ${escapeHTML(
-          movie.duration || "—"
-        )}
+        ⭐ ${Number(movie.rating || 0).toFixed(1)}
+        · ${escapeHTML(movie.duration || "—")}
       </p>
 
     </article>
-
   `;
-
 }
 
 
-/* =====================================================
-   RENDER MOVIES
-===================================================== */
+/* =========================================================
+   RENDER FILMÓW
+   ========================================================= */
 
-async function createCards(list) {
+function renderMovies(list = allMovies()) {
+  const movieRow = $("movieRow");
+  const topRow = $("topRow");
+  const continueRow = $("continueRow");
 
-  const cards =
-    await Promise.all(
-      list.map(
-        movie => movieCard(movie)
-      )
-    );
-
-  return cards.join("");
-
-}
-
-
-async function renderMovies(
-  list = movies
-) {
-
-  const movieRow =
-    $("movieRow");
-
-  const topRow =
-    $("topRow");
-
-  const continueRow =
-    $("continueRow");
-
-
-  if (
-    !movieRow ||
-    !topRow ||
-    !continueRow
-  ) {
+  if (!movieRow || !topRow || !continueRow) {
     return;
   }
 
+  movieRow.innerHTML = list
+    .slice(0, 10)
+    .map(createMovieCard)
+    .join("");
 
-  if (!list.length) {
-
-    const empty = `
-
-      <div class="empty-movies">
-
-        <div>🎬</div>
-
-        <h3>
-          Biblioteka jest pusta
-        </h3>
-
-        <p>
-          Administrator może dodać pierwszy film.
-        </p>
-
-      </div>
-
-    `;
-
-
-    movieRow.innerHTML =
-      empty;
-
-    topRow.innerHTML =
-      empty;
-
-
-    continueRow.innerHTML = `
-
-      <div class="empty-movies small-empty">
-        ▶ Brak filmów do kontynuowania
-      </div>
-
-    `;
-
-    return;
-
-  }
-
-
-  movieRow.innerHTML =
-    await createCards(list);
-
-
-  const sorted =
-    [...list].sort(
+  const top = [...allMovies()]
+    .sort(
       (a, b) =>
-        Number(
-          getMovieRating(b)
-        ) -
-        Number(
-          getMovieRating(a)
-        )
-    );
+        Number(b.rating || 0) -
+        Number(a.rating || 0)
+    )
+    .slice(0, 10);
 
+  topRow.innerHTML = top
+    .map(createMovieCard)
+    .join("");
 
-  topRow.innerHTML =
-    await createCards(
-      sorted.slice(0, 10)
-    );
+  const user = currentUser();
 
+  let continueMovies = [];
 
-  const data =
-    getMyData();
+  if (user) {
+    continueMovies = user.history
+      .map(id => getMovie(id))
+      .filter(Boolean);
+  }
 
-
-  if (
-    !data ||
-    !data.history.length
-  ) {
-
-    continueRow.innerHTML = `
-
-      <div class="empty-movies small-empty">
-        ▶ Obejrzyj film, aby pojawił się tutaj
-      </div>
-
-    `;
-
+  if (continueMovies.length) {
+    continueRow.innerHTML = continueMovies
+      .map(createMovieCard)
+      .join("");
   } else {
-
-    const continueMovies =
-      data.history
-        .map(id =>
-          movies.find(
-            movie =>
-              movie.id === id
-          )
-        )
-        .filter(Boolean);
-
-
-    continueRow.innerHTML =
-      await createCards(
-        continueMovies
-      );
-
+    continueRow.innerHTML = allMovies()
+      .slice(0, 5)
+      .map(createMovieCard)
+      .join("");
   }
-
 }
 
 
-/* =====================================================
-   DOSTĘP PREMIUM
-===================================================== */
+/* =========================================================
+   FILM
+   ========================================================= */
 
-function hasPremium(plan) {
-
-  const data =
-    getMyData();
+let currentMovie = null;
 
 
-  if (!data) {
-    return false;
-  }
-
-
-  const premium =
-    data.premium;
-
-
-  if (
-    premium.plan ===
-    "Premium na zawsze"
-  ) {
-
-    return true;
-
-  }
-
-
-  if (
-    premium.expires &&
-    Date.now() >
-      premium.expires
-  ) {
-
-    premium.plan =
-      "Basic";
-
-    premium.expires =
-      null;
-
-    saveUserData();
-
-    return false;
-
-  }
-
-
-  return (
-    premium.plan ===
-      plan ||
-    premium.plan ===
-      "Premium 4K"
-  );
-
-}
-
-
-function hasMovieAccess(movie) {
+function openMovie(id) {
+  const movie = getMovie(id);
 
   if (!movie) {
-    return false;
-  }
-
-
-  const access =
-    movie.access || "Basic";
-
-
-  if (access === "Basic") {
-    return true;
-  }
-
-
-  if (!currentUser) {
-    return false;
-  }
-
-
-  const data =
-    getMyData();
-
-
-  if (!data) {
-    return false;
-  }
-
-
-  const premium =
-    data.premium;
-
-
-  if (
-    premium.plan ===
-    "Premium na zawsze"
-  ) {
-    return true;
-  }
-
-
-  if (
-    premium.expires &&
-    Date.now() >
-      premium.expires
-  ) {
-
-    premium.plan =
-      "Basic";
-
-    premium.expires =
-      null;
-
-    saveUserData();
-
-    return false;
-
-  }
-
-
-  if (
-    access === "Premium"
-  ) {
-
-    return (
-      premium.plan ===
-        "Premium" ||
-      premium.plan ===
-        "Premium 4K"
-    );
-
-  }
-
-
-  if (
-    access === "Premium 4K"
-  ) {
-
-    return (
-      premium.plan ===
-      "Premium 4K"
-    );
-
-  }
-
-
-  return false;
-
-}
-
-
-/* =====================================================
-   OTWIERANIE FILMU
-===================================================== */
-
-async function openMovie(id) {
-
-  const movie =
-    movies.find(
-      movie =>
-        movie.id === id
-    );
-
-
-  if (!movie) {
+    toast("Nie znaleziono filmu.");
     return;
   }
 
+  currentMovie = movie;
 
-  currentMovie =
-    id;
+  $("movieTitle").textContent = movie.title;
+  $("movieDescription").textContent = movie.description;
+  $("movieCategory").textContent = movie.category;
 
+  $("movieQuality").textContent =
+    movie.quality || "HD";
 
-  showScreen(
-    movieScreen
-  );
+  $("movieRating").textContent =
+    `⭐ ${Number(movie.rating || 0).toFixed(1)}`;
 
+  $("movieDuration").textContent =
+    movie.duration || "—";
 
-  const title =
-    $("movieTitle");
+  const video = $("videoPlayer");
 
-  const description =
-    $("movieDescription");
+  if (video) {
+    video.pause();
+    video.removeAttribute("src");
 
-  const category =
-    $("movieCategory");
+    if (movie.video) {
+      video.src = movie.video;
+      video.load();
 
-  const duration =
-    $("movieDuration");
+      video.onloadedmetadata = () => {
+        const user = currentUser();
 
-  const quality =
-    $("movieQuality");
+        if (!user) return;
 
-  const rating =
-    $("movieRating");
+        const saved =
+          db.progress[user.id]?.[movie.id];
 
-
-  if (title) {
-    title.textContent =
-      movie.title;
-  }
-
-  if (description) {
-    description.textContent =
-      movie.description ||
-      "Brak opisu.";
-  }
-
-  if (category) {
-    category.textContent =
-      movie.category ||
-      "Inne";
-  }
-
-  if (duration) {
-    duration.textContent =
-      movie.duration ||
-      "—";
-  }
-
-  if (quality) {
-    quality.textContent =
-      movie.quality ||
-      "HD";
-  }
-
-  if (rating) {
-    rating.textContent =
-      "⭐ " +
-      getMovieRating(movie);
-  }
-
-
-  /* ACCESS BADGE */
-
-  const accessBadge =
-    $("movieAccessBadge");
-
-
-  if (accessBadge) {
-
-    if (
-      movie.access ===
-      "Basic"
-    ) {
-
-      accessBadge.textContent =
-        "🆓 BASIC — dostępny dla każdego";
-
-      accessBadge.className =
-        "access-badge basic";
-
-    } else {
-
-      accessBadge.textContent =
-        "💎 " +
-        movie.access;
-
-      accessBadge.className =
-        "access-badge premium";
-
+        if (
+          saved &&
+          saved > 5 &&
+          saved < video.duration - 5
+        ) {
+          video.currentTime = saved;
+        }
+      };
     }
-
   }
-
-
-  /* COMMENTS */
-
-  renderComments(movie);
-
-
-  /* HISTORY */
-
-  const data =
-    getMyData();
-
-
-  if (
-    data &&
-    !data.history.includes(id)
-  ) {
-
-    data.history.unshift(id);
-
-    data.history =
-      data.history.slice(
-        0,
-        50
-      );
-
-    saveUserData();
-
-  }
-
-
-  /* VIDEO */
-
-  if (videoPlayer) {
-
-    videoPlayer.pause();
-
-    videoPlayer.removeAttribute(
-      "src"
-    );
-
-    videoPlayer.load();
-
-  }
-
-
-  if (videoPlayer) {
-
-    const videoURL =
-      await getVideoURL(movie);
-
-
-    if (videoURL) {
-
-      videoPlayer.src =
-        videoURL;
-
-      videoPlayer.load();
-
-    }
-
-  }
-
-
-  updatePlayButton(
-    movie
-  );
-
 
   updateFavoriteButton();
+  renderRatingButtons();
+  renderComments();
+  renderAdminMovieTools();
 
-
-  await renderMovies();
-
+  showScreen("movieScreen");
 }
 
 
-/* =====================================================
-   PRZYCISK ODTWARZANIA
-===================================================== */
+/* =========================================================
+   ODTWARZANIE + POSTĘP
+   ========================================================= */
 
-function updatePlayButton(movie) {
-
-  const button =
-    $("playMovieButton");
-
-
-  if (!button) {
-    return;
-  }
-
-
-  if (hasMovieAccess(movie)) {
-
-    button.textContent =
-      "▶ Odtwórz";
-
-    button.disabled =
-      false;
-
-  } else {
-
-    button.textContent =
-      "🔒 Wymaga Premium";
-
-    button.disabled =
-      false;
-
-  }
-
-}
-
-
-/* =====================================================
-   ODTWARZANIE
-===================================================== */
-
-async function playMovie() {
-
+function playMovie() {
   if (!currentMovie) {
+    toast("Najpierw wybierz film.");
     return;
   }
 
+  if (!isLoggedIn()) {
+    toast("Zaloguj się, aby oglądać film.");
 
-  const movie =
-    movies.find(
-      movie =>
-        movie.id ===
-        currentMovie
-    );
-
-
-  if (!movie) {
+    setTimeout(openLogin, 600);
     return;
   }
 
+  const video = $("videoPlayer");
 
-  if (
-    !hasMovieAccess(movie)
-  ) {
-
-    toast(
-      movie.access ===
-        "Premium 4K"
-        ? "Ten film wymaga Premium 4K."
-        : "Ten film wymaga Premium."
-    );
-
-
-    updatePremiumScreen();
-
-    showScreen(
-      premiumScreen
-    );
-
-    return;
-
-  }
-
-
-  if (!videoPlayer) {
+  if (!video || !currentMovie.video) {
+    toast("Ten film nie ma materiału wideo.");
     return;
   }
 
-
-  const videoURL =
-    await getVideoURL(movie);
-
-
-  if (!videoURL) {
-
-    toast(
-      "Ten film nie ma jeszcze pliku wideo."
-    );
-
-    return;
-
-  }
-
-
-  try {
-
-    await videoPlayer.play();
-
-  } catch {
-
-    toast(
-      "Naciśnij ponownie Odtwórz."
-    );
-
-  }
-
+  video.play()
+    .then(() => {
+      addToHistory(currentMovie.id);
+      toast("Odtwarzanie ▶");
+    })
+    .catch(error => {
+      console.error(error);
+      toast("Kliknij ponownie, aby rozpocząć.");
+    });
 }
 
 
-/* =====================================================
-   POSTĘP FILMU
-===================================================== */
-
-function saveVideoProgress() {
+function saveProgress() {
+  const user = currentUser();
+  const video = $("videoPlayer");
 
   if (
-    !currentUser ||
+    !user ||
     !currentMovie ||
-    !videoPlayer
+    !video ||
+    !Number.isFinite(video.currentTime)
   ) {
     return;
   }
 
-
-  if (
-    !Number.isFinite(
-      videoPlayer.duration
-    ) ||
-    videoPlayer.duration <= 0
-  ) {
-    return;
+  if (!db.progress[user.id]) {
+    db.progress[user.id] = {};
   }
 
+  db.progress[user.id][currentMovie.id] =
+    video.currentTime;
 
-  const data =
-    getMyData();
-
-
-  data.progress[
-    currentMovie
-  ] = {
-
-    current:
-      videoPlayer.currentTime,
-
-    duration:
-      videoPlayer.duration,
-
-    percent:
-      Math.round(
-        (
-          videoPlayer.currentTime /
-          videoPlayer.duration
-        ) * 100
-      )
-
-  };
-
-
-  saveUserData();
-
+  saveDB();
 }
 
 
-function loadVideoProgress() {
+function addToHistory(movieId) {
+  const user = currentUser();
 
-  if (
-    !currentUser ||
-    !currentMovie ||
-    !videoPlayer
-  ) {
-    return;
+  if (!user) return;
+
+  user.history = user.history.filter(
+    id => id !== movieId
+  );
+
+  user.history.unshift(movieId);
+
+  if (user.history.length > 50) {
+    user.history.length = 50;
   }
 
-
-  const data =
-    getMyData();
-
-
-  const progress =
-    data.progress[
-      currentMovie
-    ];
-
-
-  if (
-    progress &&
-    progress.current > 0 &&
-    progress.current <
-      videoPlayer.duration
-  ) {
-
-    videoPlayer.currentTime =
-      progress.current;
-
-  }
-
+  saveCurrentUser();
+  renderMovies();
 }
 
 
-/* =====================================================
-   ULUBIONE
-===================================================== */
-
-function updateFavoriteButton() {
-
-  const button =
-    $("favoriteButton");
-
-
-  if (!button) {
-    return;
-  }
-
-
-  if (!currentUser) {
-
-    button.textContent =
-      "♡ Biblioteka";
-
-    return;
-
-  }
-
-
-  const data =
-    getMyData();
-
-
-  button.textContent =
-    data.favorites.includes(
-      currentMovie
-    )
-      ? "♥ Biblioteka"
-      : "♡ Biblioteka";
-
-}
-
+/* =========================================================
+   BIBLIOTEKA
+   ========================================================= */
 
 function toggleFavorite() {
+  const user = currentUser();
 
-  if (!currentUser) {
-
-    toast(
-      "Zaloguj się, aby korzystać z biblioteki."
-    );
-
-    showScreen(
-      loginScreen
-    );
-
-    return;
-
-  }
-
-
-  if (!currentMovie) {
+  if (!user) {
+    toast("Zaloguj się, aby korzystać z biblioteki.");
+    setTimeout(openLogin, 600);
     return;
   }
-
-
-  const data =
-    getMyData();
-
 
   const index =
-    data.favorites.indexOf(
-      currentMovie
-    );
+    user.favorites.indexOf(currentMovie.id);
 
-
-  if (index >= 0) {
-
-    data.favorites.splice(
-      index,
-      1
-    );
-
-    toast(
-      "Usunięto z biblioteki."
-    );
-
+  if (index === -1) {
+    user.favorites.push(currentMovie.id);
+    toast("Dodano do biblioteki ❤️");
   } else {
-
-    data.favorites.push(
-      currentMovie
-    );
-
-    toast(
-      "Dodano do biblioteki."
-    );
-
+    user.favorites.splice(index, 1);
+    toast("Usunięto z biblioteki.");
   }
 
-
-  saveUserData();
-
+  saveCurrentUser();
   updateFavoriteButton();
-
 }
 
 
-/* =====================================================
-   OCENIANIE
-===================================================== */
+function updateFavoriteButton() {
+  const button = $("favoriteButton");
 
-function rateMovie(rating) {
+  if (!button || !currentMovie) return;
 
-  if (!currentUser) {
+  const user = currentUser();
 
-    toast(
-      "Zaloguj się, aby ocenić film."
-    );
-
-    showScreen(
-      loginScreen
-    );
-
-    return;
-
-  }
-
-
-  if (!currentMovie) {
+  if (!user) {
+    button.textContent = "♡ Biblioteka";
     return;
   }
 
-
-  const movie =
-    movies.find(
-      movie =>
-        movie.id ===
-        currentMovie
-    );
-
-
-  if (!movie) {
-    return;
-  }
-
-
-  if (!movie.ratings) {
-    movie.ratings = [];
-  }
-
-
-  const data =
-    getMyData();
-
-
-  const previous =
-    data.ratings[
-      movie.id
-    ];
-
-
-  if (previous) {
-
-    const index =
-      movie.ratings.indexOf(
-        previous
-      );
-
-
-    if (index >= 0) {
-
-      movie.ratings.splice(
-        index,
-        1
-      );
-
-    }
-
-  }
-
-
-  movie.ratings.push(
-    Number(rating)
-  );
-
-
-  data.ratings[
-    movie.id
-  ] =
-    Number(rating);
-
-
-  saveMovies();
-  saveUserData();
-
-
-  toast(
-    `Oceniono film: ${rating}/10 ⭐`
-  );
-
-
-  openMovie(
-    movie.id
-  );
-
+  button.textContent =
+    user.favorites.includes(currentMovie.id)
+      ? "♥ W bibliotece"
+      : "♡ Biblioteka";
 }
 
 
-/* =====================================================
-   KOMENTARZE
-===================================================== */
-
-function renderComments(movie) {
-
-  const section =
-    $("commentsSection");
-
-
-  if (!section) {
+function openLibrary() {
+  if (!isLoggedIn()) {
+    toast("Zaloguj się, aby zobaczyć bibliotekę.");
+    setTimeout(openLogin, 600);
     return;
   }
 
+  setActiveNav("navLibrary");
 
-  const comments =
-    movie.comments || [];
+  showScreen("libraryScreen");
 
-
-  let html = `
-
-    <div class="comments-box">
-
-      <h3>💬 Komentarze</h3>
-
-  `;
-
-
-  if (currentUser) {
-
-    html += `
-
-      <textarea
-        id="commentInput"
-        placeholder="Napisz komentarz..."
-      ></textarea>
-
-      <button
-        class="primary full"
-        id="commentButton">
-
-        Dodaj komentarz
-
-      </button>
-
-    `;
-
-  } else {
-
-    html += `
-
-      <div class="comment-login">
-        Zaloguj się, aby komentować.
-      </div>
-
-    `;
-
-  }
-
-
-  if (!comments.length) {
-
-    html += `
-
-      <div class="no-comments">
-        Brak komentarzy. Bądź pierwszy!
-      </div>
-
-    `;
-
-  } else {
-
-    html +=
-      `<div class="comments-list">`;
-
-
-    comments
-      .slice()
-      .reverse()
-      .forEach(comment => {
-
-        html += `
-
-          <div class="comment">
-
-            <div class="comment-user">
-              👤 ${escapeHTML(
-                comment.name
-              )}
-            </div>
-
-            <div class="comment-text">
-              ${escapeHTML(
-                comment.text
-              )}
-            </div>
-
-            <small>
-              ${escapeHTML(
-                comment.date
-              )}
-            </small>
-
-          </div>
-
-        `;
-
-      });
-
-
-    html +=
-      `</div>`;
-
-  }
-
-
-  html +=
-    `</div>`;
-
-
-  section.innerHTML =
-    html;
-
-
-  $("commentButton")
-    ?.addEventListener(
-      "click",
-      addComment
-    );
-
+  showLibrary("favorites");
 }
 
 
-function addComment() {
+function showLibrary(type) {
+  const container = $("libraryMovies");
 
-  if (
-    !currentUser ||
-    !currentMovie
-  ) {
-    return;
-  }
+  const user = currentUser();
 
-
-  const input =
-    $("commentInput");
-
-
-  const text =
-    input?.value.trim();
-
-
-  if (!text) {
-
-    toast(
-      "Wpisz komentarz."
-    );
-
-    return;
-
-  }
-
-
-  const movie =
-    movies.find(
-      movie =>
-        movie.id ===
-        currentMovie
-    );
-
-
-  if (!movie) {
-    return;
-  }
-
-
-  if (!movie.comments) {
-    movie.comments = [];
-  }
-
-
-  movie.comments.push({
-
-    name:
-      currentUser.name,
-
-    text,
-
-    date:
-      new Date()
-        .toLocaleDateString(
-          "pl-PL"
-        )
-
-  });
-
-
-  saveMovies();
-
-
-  renderComments(
-    movie
-  );
-
-
-  toast(
-    "Dodano komentarz."
-  );
-
-}
-
-
-/* =====================================================
-   BIBLIOTEKA
-===================================================== */
-
-async function renderLibrary(
-  type = "favorites"
-) {
-
-  const container =
-    $("libraryMovies");
-
-
-  if (!container) {
-    return;
-  }
-
-
-  const data =
-    getMyData();
-
-
-  if (!data) {
-
-    container.innerHTML = `
-
-      <div class="empty-library">
-
-        <div>🔐</div>
-
-        <h3>
-          Zaloguj się
-        </h3>
-
-        <p>
-          Zaloguj się, aby zobaczyć bibliotekę.
-        </p>
-
-      </div>
-
-    `;
-
-    return;
-
-  }
-
+  if (!container || !user) return;
 
   let ids = [];
 
-
-  if (
-    type ===
-    "favorites"
-  ) {
-
-    ids =
-      data.favorites;
-
+  if (type === "favorites") {
+    ids = user.favorites;
   }
 
-
-  if (
-    type ===
-    "history"
-  ) {
-
-    ids =
-      data.history;
-
+  if (type === "history") {
+    ids = user.history;
   }
 
+  if (type === "continue") {
+    ids = user.history.filter(id => {
+      const progress =
+        db.progress[user.id]?.[id] || 0;
 
-  if (
-    type ===
-    "continue"
-  ) {
-
-    ids =
-      data.history;
-
+      return progress > 0;
+    });
   }
 
+  const selected = ids
+    .map(getMovie)
+    .filter(Boolean);
 
-  const list =
-    ids
-      .map(id =>
-        movies.find(
-          movie =>
-            movie.id === id
-        )
-      )
-      .filter(Boolean);
-
-
-  if (!list.length) {
-
+  if (!selected.length) {
     container.innerHTML = `
-
       <div class="empty-library">
+        <div>♡</div>
 
-        <div>🎬</div>
-
-        <h3>
-          Nic tutaj nie ma
-        </h3>
+        <h2>Biblioteka jest pusta</h2>
 
         <p>
-          Obejrzyj lub dodaj film do biblioteki.
+          Filmy, które dodasz, pojawią się tutaj.
+        </p>
+      </div>
+    `;
+
+    return;
+  }
+
+  container.innerHTML = selected
+    .map(movie => `
+      <div
+        class="library-item"
+        data-movie-id="${escapeHTML(movie.id)}">
+
+        <div
+          class="mini-poster ${escapeHTML(movie.poster || "poster1")}">
+        </div>
+
+        <div>
+
+          <h3>
+            ${escapeHTML(movie.title)}
+          </h3>
+
+          <p>
+            ${escapeHTML(movie.category)}
+          </p>
+
+          <p>
+            ⭐ ${Number(movie.rating || 0).toFixed(1)}
+            · ${escapeHTML(movie.duration || "—")}
+          </p>
+
+        </div>
+
+      </div>
+    `)
+    .join("");
+}
+
+
+/* =========================================================
+   OCENY
+   ========================================================= */
+
+function rateMovie(number) {
+  const user = currentUser();
+
+  if (!user) {
+    toast("Zaloguj się, aby oceniać.");
+    setTimeout(openLogin, 600);
+    return;
+  }
+
+  if (!currentMovie) return;
+
+  const rating =
+    Math.max(1, Math.min(10, Number(number)));
+
+  user.ratings[currentMovie.id] = rating;
+
+  saveCurrentUser();
+
+  renderRatingButtons();
+
+  toast(`Twoja ocena: ${rating}/10 ⭐`);
+}
+
+
+function renderRatingButtons() {
+  const user = currentUser();
+
+  const rating =
+    user?.ratings?.[currentMovie?.id] || 0;
+
+  document
+    .querySelectorAll("[data-rating]")
+    .forEach(button => {
+
+      const value =
+        Number(button.dataset.rating);
+
+      button.style.opacity =
+        !rating || value <= rating
+          ? "1"
+          : ".45";
+    });
+}
+
+
+/* =========================================================
+   KATEGORIE
+   ========================================================= */
+
+function filterMovies(category) {
+  setActiveNav("navHome");
+
+  if (category === "Wszystkie") {
+    renderMovies();
+    goHome();
+    return;
+  }
+
+  const filtered =
+    allMovies().filter(
+      movie => movie.category === category
+    );
+
+  const movieRow = $("movieRow");
+
+  if (!movieRow) return;
+
+  movieRow.innerHTML =
+    filtered.length
+      ? filtered.map(createMovieCard).join("")
+      : `
+        <p>
+          Brak filmów w kategorii
+          „${escapeHTML(category)}”.
+        </p>
+      `;
+
+  window.scrollTo({
+    top: 0,
+    behavior: "smooth"
+  });
+}
+
+
+/* =========================================================
+   SZUKANIE
+   ========================================================= */
+
+function openSearch() {
+  setActiveNav("navSearch");
+
+  showScreen("searchScreen");
+
+  setTimeout(() => {
+    $("searchInput")?.focus();
+  }, 250);
+}
+
+
+function searchMovies() {
+  const input = $("searchInput");
+  const results = $("searchResults");
+
+  if (!input || !results) return;
+
+  const query =
+    input.value.toLowerCase().trim();
+
+  if (!query) {
+    results.innerHTML = "";
+    return;
+  }
+
+  const found = allMovies().filter(movie =>
+    movie.title.toLowerCase().includes(query) ||
+    movie.category.toLowerCase().includes(query) ||
+    movie.description.toLowerCase().includes(query)
+  );
+
+  if (!found.length) {
+    results.innerHTML = `
+      <div class="result">
+        Nie znaleziono filmu.
+      </div>
+    `;
+
+    return;
+  }
+
+  results.innerHTML = found
+    .map(movie => `
+      <div
+        class="result"
+        data-movie-id="${escapeHTML(movie.id)}">
+
+        <strong>
+          ${escapeHTML(movie.title)}
+        </strong>
+
+        <p>
+          ${escapeHTML(movie.category)}
+          · ⭐ ${Number(movie.rating || 0).toFixed(1)}
+          · ${escapeHTML(movie.duration || "—")}
         </p>
 
       </div>
-
-    `;
-
-    return;
-
-  }
-
-
-  const items =
-    await Promise.all(
-      list.map(
-        async movie => {
-
-          const poster =
-            await getPosterURL(
-              movie
-            );
-
-
-          return `
-
-            <div
-              class="library-item"
-              data-movie-id="${escapeHTML(
-                movie.id
-              )}">
-
-              <div
-                class="mini-poster"
-                style="${
-                  poster
-                    ? `background-image:url("${poster}")`
-                    : ""
-                }">
-
-              </div>
-
-              <div>
-
-                <h3>
-                  ${escapeHTML(
-                    movie.title
-                  )}
-                </h3>
-
-                <p>
-                  ${escapeHTML(
-                    movie.category ||
-                    "Inne"
-                  )}
-                </p>
-
-                <p>
-                  ⭐ ${getMovieRating(
-                    movie
-                  )}
-                  · ${escapeHTML(
-                    movie.quality ||
-                    "HD"
-                  )}
-                </p>
-
-              </div>
-
-            </div>
-
-          `;
-
-        }
-      )
-    );
-
-
-  container.innerHTML =
-    items.join("");
-
+    `)
+    .join("");
 }
 
 
-/* =====================================================
-   LOGOWANIE
-===================================================== */
-
-function login() {
-
-  const login =
-    $("loginEmail")
-      ?.value
-      .trim();
-
-
-  const password =
-    $("loginPassword")
-      ?.value;
-
-
-  if (
-    !login ||
-    !password
-  ) {
-
-    toast(
-      "Wpisz login i hasło."
-    );
-
-    return;
-
-  }
-
-
-  /* ADMIN */
-
-  if (
-    login ===
-      ADMIN_LOGIN &&
-    password ===
-      ADMIN_PASSWORD
-  ) {
-
-    currentUser = {
-
-      id:
-        "admin",
-
-      name:
-        "Administrator",
-
-      login:
-        ADMIN_LOGIN,
-
-      role:
-        "admin"
-
-    };
-
-
-    saveSession();
-
-    createUserData(
-      "admin"
-    );
-
-    updateProfile();
-
-    renderMovies();
-
-
-    toast(
-      "👑 Zalogowano jako administrator."
-    );
-
-
-    showScreen(
-      profileScreen
-    );
-
-
-    return;
-
-  }
-
-
-  /* USER */
-
-  const account =
-    accounts.find(
-      account =>
-        account.login
-          .toLowerCase() ===
-        login.toLowerCase()
-    );
-
-
-  if (!account) {
-
-    toast(
-      "Nie znaleziono takiego konta."
-    );
-
-    return;
-
-  }
-
-
-  if (
-    account.password !==
-    password
-  ) {
-
-    toast(
-      "Nieprawidłowe hasło."
-    );
-
-    return;
-
-  }
-
-
-  currentUser = {
-
-    id:
-      account.id,
-
-    name:
-      account.name,
-
-    login:
-      account.login,
-
-    role:
-      "user"
-
-  };
-
-
-  saveSession();
-
-  createUserData(
-    account.id
-  );
-
-
-  updateProfile();
-
-  renderMovies();
-
-
-  toast(
-    "Zalogowano."
-  );
-
-
-  showScreen(
-    profileScreen
-  );
-
-}
-
-
-/* =====================================================
+/* =========================================================
    REJESTRACJA
-===================================================== */
+   ========================================================= */
 
-function register() {
-
+async function createAccount() {
   const name =
-    $("registerName")
-      ?.value
-      .trim();
+    $("registerName").value.trim();
 
-
-  const login =
+  const email =
     $("registerEmail")
-      ?.value
-      .trim();
-
+      .value
+      .trim()
+      .toLowerCase();
 
   const password =
-    $("registerPassword")
-      ?.value;
+    $("registerPassword").value;
 
-
-  if (
-    !name ||
-    !login ||
-    !password
-  ) {
-
-    toast(
-      "Wypełnij wszystkie pola."
-    );
-
+  if (!name || !email || !password) {
+    toast("Wypełnij wszystkie pola.");
     return;
-
   }
 
-
   if (
-    login.toLowerCase() ===
-    ADMIN_LOGIN.toLowerCase()
+    !email.includes("@") ||
+    !email.includes(".")
   ) {
-
-    toast(
-      "Ten login jest zarezerwowany."
-    );
-
+    toast("Podaj prawidłowy e-mail.");
     return;
-
   }
 
-
-  if (
-    password.length < 4
-  ) {
-
-    toast(
-      "Hasło musi mieć minimum 4 znaki."
-    );
-
+  if (password.length < 8) {
+    toast("Hasło musi mieć minimum 8 znaków.");
     return;
-
   }
 
+  const exists = db.accounts.some(
+    account =>
+      account.email.toLowerCase() === email
+  );
 
-  if (
-    accounts.some(
-      account =>
-        account.login
-          .toLowerCase() ===
-        login.toLowerCase()
-    )
-  ) {
-
-    toast(
-      "Takie konto już istnieje."
-    );
-
+  if (exists) {
+    toast("Konto z tym e-mailem już istnieje.");
     return;
-
   }
 
+  const passwordHash =
+    await hashPassword(password);
 
   const account = {
-
-    id:
-      "user_" +
-      Date.now() +
-      "_" +
-      Math.random()
-        .toString(36)
-        .slice(2),
-
+    id: randomId("user"),
     name,
-    login,
-    password
-
+    email,
+    passwordHash,
+    role: "user",
+    ...createUserData()
   };
 
+  db.accounts.push(account);
 
-  accounts.push(
-    account
-  );
+  db.currentUserId = account.id;
 
+  saveDB();
 
-  saveAccounts();
+  $("registerName").value = "";
+  $("registerEmail").value = "";
+  $("registerPassword").value = "";
 
-  createUserData(
-    account.id
-  );
+  toast("Konto zostało utworzone 🎉");
 
-
-  currentUser = {
-
-    id:
-      account.id,
-
-    name:
-      account.name,
-
-    login:
-      account.login,
-
-    role:
-      "user"
-
-  };
-
-
-  saveSession();
-
-  updateProfile();
-
-  renderMovies();
-
-
-  toast(
-    "Konto zostało utworzone."
-  );
-
-
-  showScreen(
-    profileScreen
-  );
-
+  setTimeout(openProfile, 500);
 }
 
 
-/* =====================================================
-   WYLOGOWANIE
-===================================================== */
+/* =========================================================
+   LOGOWANIE
+   ========================================================= */
 
-function logout() {
+async function login() {
+  const email =
+    $("loginEmail")
+      .value
+      .trim()
+      .toLowerCase();
 
-  if (videoPlayer) {
+  const password =
+    $("loginPassword").value;
 
-    videoPlayer.pause();
-
-  }
-
-
-  currentUser =
-    null;
-
-
-  saveSession();
-
-  updateProfile();
-
-  renderMovies();
-
-
-  toast(
-    "Wylogowano."
-  );
-
-
-  showScreen(
-    loginScreen
-  );
-
-}
-
-
-/* =====================================================
-   RESET HASŁA
-===================================================== */
-
-function forgotPassword() {
-
-  if (!currentUser) {
-
-    toast(
-      "To jest lokalna wersja demo. Zaloguj się ponownie."
-    );
-
-    return;
-
-  }
-
-
-  const newPassword =
-    prompt(
-      "Podaj nowe hasło:"
-    );
-
-
-  if (!newPassword) {
+  if (!email || !password) {
+    toast("Wpisz e-mail i hasło.");
     return;
   }
-
-
-  if (
-    currentUser.role ===
-    "admin"
-  ) {
-
-    toast(
-      "Hasło administratora jest ustawione w app.js."
-    );
-
-    return;
-
-  }
-
 
   const account =
-    accounts.find(
-      account =>
-        account.id ===
-        currentUser.id
+    db.accounts.find(
+      user =>
+        user.email.toLowerCase() === email
     );
 
-
   if (!account) {
+    toast("Nieprawidłowy e-mail lub hasło.");
     return;
   }
 
+  const passwordHash =
+    await hashPassword(password);
 
-  account.password =
-    newPassword;
+  if (passwordHash !== account.passwordHash) {
+    toast("Nieprawidłowy e-mail lub hasło.");
+    return;
+  }
 
+  ensureUserData(account);
 
-  saveAccounts();
+  db.currentUserId = account.id;
 
+  saveDB();
 
-  toast(
-    "Hasło zmienione lokalnie."
-  );
+  $("loginEmail").value = "";
+  $("loginPassword").value = "";
 
+  if (account.role === "admin") {
+    toast("Zalogowano jako administrator 👑");
+  } else {
+    toast("Zalogowano 👋");
+  }
+
+  updateProfile();
+  updateAdminUI();
+
+  setTimeout(openProfile, 500);
 }
 
 
-/* =====================================================
-   PREMIUM
-===================================================== */
+/* =========================================================
+   PROFIL
+   ========================================================= */
 
-function updatePremiumScreen() {
+function openProfile() {
+  setActiveNav("navProfile");
 
-  const current =
-    $("currentPlan");
+  updateProfile();
+  updateAdminUI();
+
+  showScreen("profileScreen");
+}
 
 
-  if (!current) {
+function updateProfile() {
+  const user = currentUser();
+
+  if (user) {
+    $("profileName").textContent =
+      user.name;
+
+    $("profileEmail").textContent =
+      user.email;
+
+    $("profileLoggedOut")
+      ?.classList.add("hidden");
+
+    $("profileLoggedIn")
+      ?.classList.remove("hidden");
+
+    addAdminProfileButton();
+  } else {
+    $("profileName").textContent =
+      "Gość";
+
+    $("profileEmail").textContent =
+      "Nie jesteś zalogowany";
+
+    $("profileLoggedOut")
+      ?.classList.remove("hidden");
+
+    $("profileLoggedIn")
+      ?.classList.add("hidden");
+
+    removeAdminProfileButton();
+  }
+}
+
+
+function openLogin() {
+  showScreen("loginScreen");
+}
+
+
+function openRegister() {
+  showScreen("registerScreen");
+}
+
+
+/* =========================================================
+   RESET HASŁA
+   ========================================================= */
+
+function forgotPassword() {
+  if (!isLoggedIn()) {
+    toast(
+      "Reset hasła przez e-mail wymaga backendu."
+    );
+
     return;
   }
 
+  const user = currentUser();
 
-  if (!currentUser) {
+  const oldPassword =
+    prompt("Podaj obecne hasło:");
 
-    current.innerHTML = `
+  if (!oldPassword) return;
 
+  hashPassword(oldPassword)
+    .then(oldHash => {
+
+      if (oldHash !== user.passwordHash) {
+        toast("Nieprawidłowe obecne hasło.");
+        return;
+      }
+
+      const newPassword =
+        prompt("Podaj nowe hasło:");
+
+      if (!newPassword) return;
+
+      if (newPassword.length < 8) {
+        toast(
+          "Nowe hasło musi mieć minimum 8 znaków."
+        );
+
+        return;
+      }
+
+      return hashPassword(newPassword);
+    })
+    .then(newHash => {
+
+      if (!newHash) return;
+
+      user.passwordHash = newHash;
+
+      saveCurrentUser();
+
+      toast("Hasło zostało zmienione 🔐");
+    });
+}
+
+
+/* =========================================================
+   WYLOGOWANIE
+   ========================================================= */
+
+function logout() {
+  db.currentUserId = null;
+
+  saveDB();
+
+  updateProfile();
+  updateAdminUI();
+
+  toast("Wylogowano.");
+
+  setTimeout(() => {
+    closeScreen();
+    setActiveNav("navHome");
+    renderMovies();
+  }, 500);
+}
+
+
+/* =========================================================
+   PREMIUM
+   ========================================================= */
+
+function openPremium() {
+  updatePremium();
+  showScreen("premiumScreen");
+}
+
+
+function updatePremium() {
+  const element = $("currentPlan");
+
+  const user = currentUser();
+
+  if (!element || !user) {
+    if (element) {
+      element.innerHTML = `
+        <div class="plan-status">
+          Zaloguj się, aby korzystać z Premium.
+        </div>
+      `;
+    }
+
+    return;
+  }
+
+  ensureUserData(user);
+
+  const premium = user.premium;
+
+  if (premium.plan === "Free") {
+    element.innerHTML = `
       <div class="plan-status">
-        Zaloguj się, aby korzystać z Premium.
+        Aktualny plan:
+        <strong>Free</strong>
       </div>
-
     `;
 
     return;
-
   }
 
-
-  const data =
-    getMyData();
-
-
-  let plan =
-    data.premium.plan;
-
-
-  if (
-    data.premium.expires &&
-    Date.now() >
-      data.premium.expires
-  ) {
-
-    data.premium.plan =
-      "Basic";
-
-    data.premium.expires =
-      null;
-
-    saveUserData();
-
-    plan =
-      "Basic";
-
-  }
-
-
-  let expiryText =
-    "";
-
-
-  if (
-    data.premium.expires
-  ) {
-
-    expiryText =
-      `
+  if (premium.expires === null) {
+    element.innerHTML = `
+      <div class="plan-status">
+        💎
+        <strong>
+          ${escapeHTML(premium.plan)}
+        </strong>
         <br>
-        <small>
-          Ważny do:
-          ${new Date(
-            data.premium.expires
-          ).toLocaleDateString("pl-PL")}
-        </small>
-      `;
-
-  }
-
-
-  current.innerHTML = `
-
-    <div class="plan-status">
-
-      💎 Twój plan:
-
-      <strong>
-        ${escapeHTML(plan)}
-      </strong>
-
-      ${expiryText}
-
-    </div>
-
-  `;
-
-}
-
-
-/* =====================================================
-   PLANY
-===================================================== */
-
-function buyPlan(plan) {
-
-  if (!currentUser) {
-
-    toast(
-      "Najpierw się zaloguj."
-    );
-
-    showScreen(
-      loginScreen
-    );
+        Aktywny bezterminowo.
+      </div>
+    `;
 
     return;
-
   }
 
+  const expires =
+    Number(premium.expires);
 
-  const data =
-    getMyData();
+  if (
+    !Number.isFinite(expires) ||
+    expires <= Date.now()
+  ) {
+    user.premium = {
+      plan: "Free",
+      expires: null
+    };
 
+    saveCurrentUser();
 
-  /*
-    WERSJA DEMO:
-    brak prawdziwej płatności.
-  */
+    updatePremium();
 
-  data.premium.plan =
-    plan;
+    return;
+  }
 
+  const date =
+    new Date(expires);
 
-  data.premium.expires =
-    plan ===
-      "Premium na zawsze"
-      ? null
-      : Date.now() +
-        30 *
-        24 *
-        60 *
-        60 *
-        1000;
-
-
-  saveUserData();
-
-  updatePremiumScreen();
-
-
-  toast(
-    `💎 Aktywowano ${plan} — DEMO`
-  );
-
+  element.innerHTML = `
+    <div class="plan-status">
+      💎
+      <strong>
+        ${escapeHTML(premium.plan)}
+      </strong>
+      <br>
+      Aktywny do:
+      ${date.toLocaleDateString("pl-PL")}
+    </div>
+  `;
 }
 
 
-/* =====================================================
+function buyPlan(plan, days) {
+  const user = currentUser();
+
+  if (!user) {
+    toast("Najpierw zaloguj się.");
+    setTimeout(openLogin, 600);
+    return;
+  }
+
+  /*
+    DEMO.
+    Tutaj NIE ma prawdziwej płatności.
+  */
+
+  user.premium =
+    days === 0
+      ? {
+          plan,
+          expires: null
+        }
+      : {
+          plan,
+          expires:
+            Date.now() +
+            days * 86400000
+        };
+
+  saveCurrentUser();
+
+  updatePremium();
+
+  toast(
+    `${plan} został aktywowany 💎`
+  );
+}
+
+
+/* =========================================================
    VOUCHERY
-===================================================== */
+   ========================================================= */
 
 const voucherCodes = {
 
@@ -2795,831 +1342,931 @@ const voucherCodes = {
 
 
 function activateVoucher(type) {
+  const user = currentUser();
 
-  if (!currentUser) {
-
-    toast(
-      "Zaloguj się."
-    );
-
-    showScreen(
-      loginScreen
-    );
-
+  if (!user) {
+    toast("Najpierw zaloguj się.");
+    setTimeout(openLogin, 600);
     return;
-
   }
 
+  let input = null;
 
-  let inputId =
-    "premiumCode";
-
-
-  if (
-    type === "4k"
-  ) {
-
-    inputId =
-      "premium4kCode";
-
+  if (type === "premium") {
+    input = $("premiumCode");
   }
 
-
-  if (
-    type === "lifetime"
-  ) {
-
-    inputId =
-      "lifetimeCode";
-
+  if (type === "4k") {
+    input = $("premium4kCode");
   }
 
-
-  const input =
-    $(inputId);
-
+  if (type === "lifetime") {
+    input = $("lifetimeCode");
+  }
 
   if (!input) {
+    toast("Nie znaleziono pola kodu.");
     return;
   }
 
-
   const code =
-    input.value
-      .trim()
-      .toUpperCase();
+    input.value.trim().toUpperCase();
 
+  if (!code) {
+    toast("Wpisz kod bonu.");
+    return;
+  }
 
   const voucher =
     voucherCodes[code];
 
-
   if (!voucher) {
-
-    toast(
-      "Nieprawidłowy kod."
-    );
-
+    toast("Nieprawidłowy kod.");
     return;
-
   }
 
+  if (db.usedVouchers.includes(code)) {
+    toast("Ten bon został już wykorzystany.");
+    return;
+  }
 
-  const data =
-    getMyData();
+  if (
+    type === "premium" &&
+    voucher.plan !== "Premium"
+  ) {
+    toast("Ten kod jest do innego pakietu.");
+    return;
+  }
 
+  if (
+    type === "4k" &&
+    voucher.plan !== "Premium 4K"
+  ) {
+    toast("Ten kod jest do innego pakietu.");
+    return;
+  }
 
-  data.premium.plan =
-    voucher.plan;
+  if (
+    type === "lifetime" &&
+    voucher.plan !== "Premium na zawsze"
+  ) {
+    toast("Ten kod jest do innego pakietu.");
+    return;
+  }
 
-
-  data.premium.expires =
+  user.premium =
     voucher.days === 0
-      ? null
-      : Date.now() +
-        voucher.days *
-        24 *
-        60 *
-        60 *
-        1000;
+      ? {
+          plan: voucher.plan,
+          expires: null
+        }
+      : {
+          plan: voucher.plan,
+          expires:
+            Date.now() +
+            voucher.days * 86400000
+        };
 
+  db.usedVouchers.push(code);
 
-  saveUserData();
+  saveDB();
 
+  input.value = "";
 
-  input.value =
-    "";
+  updatePremium();
 
-
-  updatePremiumScreen();
-
-
-  toast(
-    `💎 Aktywowano ${voucher.plan}.`
-  );
-
+  toast("Bon został aktywowany 🎉");
 }
 
 
-/* =====================================================
-   WYSZUKIWANIE
-===================================================== */
+/* =========================================================
+   DODAWANIE FILMÓW
+   TYLKO ADMIN
+   ========================================================= */
 
-function searchMovies() {
-
-  const input =
-    $("searchInput");
-
-
-  const results =
-    $("searchResults");
-
-
-  if (!input || !results) {
+function openAdd() {
+  if (!isLoggedIn()) {
+    toast("Tylko administrator może dodawać filmy.");
+    setTimeout(openLogin, 600);
     return;
   }
-
-
-  const query =
-    input.value
-      .trim()
-      .toLowerCase();
-
-
-  if (!query) {
-
-    results.innerHTML =
-      "";
-
-    return;
-
-  }
-
-
-  const found =
-    movies.filter(movie =>
-
-      movie.title
-        .toLowerCase()
-        .includes(query)
-
-      ||
-
-      (
-        movie.category ||
-        ""
-      )
-        .toLowerCase()
-        .includes(query)
-
-      ||
-
-      (
-        movie.description ||
-        ""
-      )
-        .toLowerCase()
-        .includes(query)
-
-    );
-
-
-  results.innerHTML =
-    found.length
-
-      ? found.map(movie => `
-
-          <div
-            class="result"
-            data-movie-id="${escapeHTML(
-              movie.id
-            )}">
-
-            <strong>
-              ${escapeHTML(
-                movie.title
-              )}
-            </strong>
-
-            <p>
-              ${escapeHTML(
-                movie.category ||
-                "Inne"
-              )}
-
-              ·
-
-              ${escapeHTML(
-                movie.quality ||
-                "HD"
-              )}
-
-              · ⭐
-              ${getMovieRating(
-                movie
-              )}
-
-            </p>
-
-          </div>
-
-        `).join("")
-
-      : `
-
-        <div class="empty-library">
-          🔎 Nie znaleziono filmu.
-        </div>
-
-      `;
-
-}
-
-
-/* =====================================================
-   DODAWANIE FILMU
-===================================================== */
-
-let selectedPoster = null;
-let selectedVideo = null;
-
-
-/* =====================================================
-   PLAKAT
-===================================================== */
-
-function handlePosterFile() {
-
-  const input =
-    $("addPosterFile");
-
-
-  const file =
-    input?.files?.[0];
-
-
-  if (!file) {
-    return;
-  }
-
-
-  if (
-    !file.type.startsWith(
-      "image/"
-    )
-  ) {
-
-    toast(
-      "Wybierz zdjęcie."
-    );
-
-    return;
-
-  }
-
-
-  selectedPoster =
-    file;
-
-
-  const preview =
-    $("posterPreview");
-
-
-  if (preview) {
-
-    const url =
-      URL.createObjectURL(
-        file
-      );
-
-
-    preview.classList.remove(
-      "hidden"
-    );
-
-
-    preview.style.backgroundImage =
-      `url("${url}")`;
-
-  }
-
-
-  toast(
-    "🖼️ Plakat wybrany."
-  );
-
-}
-
-
-/* =====================================================
-   VIDEO
-===================================================== */
-
-function handleVideoFile() {
-
-  const input =
-    $("addVideoFile");
-
-
-  const file =
-    input?.files?.[0];
-
-
-  if (!file) {
-    return;
-  }
-
-
-  if (
-    !file.type.startsWith(
-      "video/"
-    )
-  ) {
-
-    toast(
-      "Wybierz plik wideo."
-    );
-
-    return;
-
-  }
-
-
-  selectedVideo =
-    file;
-
-
-  const name =
-    $("videoFileName");
-
-
-  if (name) {
-
-    name.textContent =
-      `🎬 ${file.name}`;
-
-  }
-
-
-  toast(
-    "🎬 Film został wybrany."
-  );
-
-}
-
-
-/* =====================================================
-   DODAJ FILM
-===================================================== */
-
-async function addMovie() {
 
   if (!isAdmin()) {
-
-    toast(
-      "Tylko administrator może dodawać filmy."
-    );
-
-    showScreen(
-      loginScreen
-    );
-
+    toast("Nie masz uprawnień administratora.");
     return;
-
   }
 
+  showScreen("addScreen");
+}
+
+
+function addMovie() {
+  if (!isAdmin()) {
+    toast("Brak uprawnień administratora.");
+    return;
+  }
 
   const title =
-    $("addTitle")
-      ?.value
-      .trim();
+    $("addTitle").value.trim();
 
+  const description =
+    $("addDescription").value.trim();
 
   const category =
-    $("addCategory")
-      ?.value;
+    $("addCategory").value.trim() ||
+    "Inne";
 
-
-  const access =
-    $("addAccess")
-      ?.value ||
-    "Basic";
-
+  const duration =
+    $("addDuration").value.trim() ||
+    "—";
 
   const quality =
-    $("addQuality")
-      ?.value ||
+    $("addQuality").value.trim() ||
     "HD";
 
-
-  const duration =
-    $("addDuration")
-      ?.value
-      .trim();
-
-
-  const description =
-    $("addDescription")
-      ?.value
-      .trim();
-
-
-  if (!title) {
-
-    toast(
-      "Podaj tytuł filmu."
-    );
-
-    return;
-
-  }
-
-
-  if (!category) {
-
-    toast(
-      "Wybierz kategorię."
-    );
-
-    return;
-
-  }
-
-
-  if (!selectedPoster) {
-
-    toast(
-      "Wybierz plakat filmu."
-    );
-
-    return;
-
-  }
-
-
-  if (!selectedVideo) {
-
-    toast(
-      "Wybierz plik filmu."
-    );
-
-    return;
-
-  }
-
-
-  if (!db) {
-
-    toast(
-      "Baza filmu nie jest gotowa. Spróbuj ponownie."
-    );
-
-    return;
-
-  }
-
-
-  try {
-
-    toast(
-      "⏳ Zapisywanie filmu..."
-    );
-
-
-    /* ZAPIS PLAKATU */
-
-    const posterKey =
-      await saveFileToDB(
-        selectedPoster
-      );
-
-
-    /* ZAPIS WIDEO */
-
-    const videoKey =
-      await saveFileToDB(
-        selectedVideo
-      );
-
-
-    const movie = {
-
-      id:
-        "movie_" +
-        Date.now() +
-        "_" +
-        Math.random()
-          .toString(36)
-          .slice(2),
-
-      title,
-
-      category,
-
-      access,
-
-      quality,
-
-      posterKey,
-
-      videoKey,
-
-      duration:
-        duration ||
-        "—",
-
-      description:
-        description ||
-        "Brak opisu.",
-
-      ratings: [],
-
-      comments: [],
-
-      createdAt:
-        Date.now()
-
-    };
-
-
-    movies.unshift(
-      movie
-    );
-
-
-    saveMovies();
-
-
-    resetAddForm();
-
-
-    await renderMovies();
-
-
-    toast(
-      "🎬 Film został dodany!"
-    );
-
-
-    hideAllScreens();
-
-
-    window.scrollTo({
-      top: 0,
-      behavior: "smooth"
-    });
-
-
-  } catch (error) {
-
-    console.error(
-      "Błąd dodawania filmu:",
-      error
-    );
-
-
-    toast(
-      "Nie udało się zapisać filmu."
-    );
-
-  }
-
-}
-
-
-/* =====================================================
-   RESET FORMULARZA
-===================================================== */
-
-function resetAddForm() {
-
-  const title =
-    $("addTitle");
-
-  const category =
-    $("addCategory");
-
-  const access =
-    $("addAccess");
-
-  const quality =
-    $("addQuality");
-
-  const duration =
-    $("addDuration");
-
-  const description =
-    $("addDescription");
-
-  const poster =
-    $("addPosterFile");
-
   const video =
-    $("addVideoFile");
+    $("addVideo").value.trim();
 
-  const videoName =
-    $("videoFileName");
-
-  const preview =
-    $("posterPreview");
-
-
-  if (title) {
-    title.value = "";
+  if (!title || !description) {
+    toast("Podaj tytuł i opis.");
+    return;
   }
-
-  if (category) {
-    category.value = "";
-  }
-
-  if (access) {
-    access.value =
-      "Basic";
-  }
-
-  if (quality) {
-    quality.value =
-      "HD";
-  }
-
-  if (duration) {
-    duration.value = "";
-  }
-
-  if (description) {
-    description.value = "";
-  }
-
-  if (poster) {
-    poster.value = "";
-  }
-
-  if (video) {
-    video.value = "";
-  }
-
-  if (videoName) {
-    videoName.textContent = "";
-  }
-
-
-  selectedPoster =
-    null;
-
-  selectedVideo =
-    null;
-
-
-  if (preview) {
-
-    preview.style.backgroundImage =
-      "";
-
-    preview.classList.add(
-      "hidden"
-    );
-
-  }
-
-}
-
-
-/* =====================================================
-   KATEGORIE
-===================================================== */
-
-async function filterCategory(
-  category
-) {
 
   if (
-    category ===
-    "Wszystkie"
+    video &&
+    !/^https?:\/\//i.test(video)
   ) {
-
-    await renderMovies(
-      movies
+    toast(
+      "Adres filmu musi zaczynać się od http:// lub https://"
     );
 
     return;
-
   }
 
+  const newMovie = {
+    id: randomId("movie"),
+    title,
+    category,
+    rating: 0,
+    duration,
+    quality,
+    description,
+    poster: "poster4",
+    video,
+    addedBy: currentUser().id
+  };
 
-  const filtered =
-    movies.filter(
-      movie =>
-        movie.category ===
-        category
+  db.customMovies.push(newMovie);
+
+  saveDB();
+
+  renderMovies();
+
+  clearAddForm();
+
+  toast("Film został dodany 🎬");
+
+  setTimeout(closeScreen, 600);
+}
+
+
+function clearAddForm() {
+  $("addTitle").value = "";
+  $("addDescription").value = "";
+  $("addCategory").value = "";
+  $("addDuration").value = "";
+  $("addQuality").value = "";
+  $("addVideo").value = "";
+}
+
+
+/* =========================================================
+   USUWANIE FILMU
+   ========================================================= */
+
+function deleteMovie(movieId) {
+  if (!isAdmin()) {
+    toast("Brak uprawnień.");
+    return;
+  }
+
+  const movie =
+    db.customMovies.find(
+      item => item.id === movieId
     );
 
+  if (!movie) {
+    toast(
+      "Tego filmu nie można usunąć."
+    );
 
-  await renderMovies(
-    filtered
+    return;
+  }
+
+  const confirmed =
+    confirm(
+      `Usunąć film „${movie.title}”?`
+    );
+
+  if (!confirmed) return;
+
+  db.customMovies =
+    db.customMovies.filter(
+      item => item.id !== movieId
+    );
+
+  saveDB();
+
+  if (currentMovie?.id === movieId) {
+    currentMovie = null;
+    closeScreen();
+  }
+
+  renderMovies();
+
+  toast("Film został usunięty.");
+}
+
+
+/* =========================================================
+   PANEL ADMINA W PROFILU
+   ========================================================= */
+
+function addAdminProfileButton() {
+  if (!isAdmin()) {
+    removeAdminProfileButton();
+    return;
+  }
+
+  const menu =
+    document.querySelector(".profile-menu");
+
+  if (!menu) return;
+
+  if ($("adminPanelButton")) return;
+
+  const button =
+    document.createElement("button");
+
+  button.id = "adminPanelButton";
+  button.innerHTML =
+    "👑 Panel administratora";
+
+  button.addEventListener(
+    "click",
+    openAdminPanel
   );
 
+  menu.prepend(button);
 }
 
 
-/* =====================================================
-   BEZPIECZNY TEKST
-===================================================== */
+function removeAdminProfileButton() {
+  $("adminPanelButton")?.remove();
+}
 
-function escapeHTML(value) {
 
-  return String(
-    value ?? ""
-  )
-    .replaceAll(
-      "&",
-      "&amp;"
-    )
-    .replaceAll(
-      "<",
-      "&lt;"
-    )
-    .replaceAll(
-      ">",
-      "&gt;"
-    )
-    .replaceAll(
-      '"',
-      "&quot;"
-    )
-    .replaceAll(
-      "'",
-      "&#039;"
+function updateAdminUI() {
+  const addButton = $("navAdd");
+
+  if (!addButton) return;
+
+  if (isAdmin()) {
+    addButton.style.display = "flex";
+  } else {
+    addButton.style.display = "none";
+  }
+}
+
+
+/* =========================================================
+   PANEL ADMINA
+   ========================================================= */
+
+function openAdminPanel() {
+  if (!isAdmin()) {
+    toast("Brak uprawnień.");
+    return;
+  }
+
+  showAdminPanel();
+
+  showScreen("profileScreen");
+}
+
+
+function showAdminPanel() {
+  const loggedIn =
+    $("profileLoggedIn");
+
+  if (!loggedIn) return;
+
+  let panel =
+    $("adminPanel");
+
+  if (!panel) {
+    panel =
+      document.createElement("div");
+
+    panel.id = "adminPanel";
+
+    panel.style.marginTop = "20px";
+    panel.style.padding = "18px";
+    panel.style.borderRadius = "18px";
+    panel.style.background = "#15101d";
+    panel.style.textAlign = "left";
+
+    loggedIn.appendChild(panel);
+  }
+
+  panel.innerHTML = `
+    <h2>
+      👑 Panel administratora
+    </h2>
+
+    <p style="color:#918899">
+      Tylko administrator może zarządzać filmami.
+    </p>
+
+    <button
+      class="primary full"
+      id="adminAddMovieButton">
+      ＋ Dodaj film
+    </button>
+
+    <h3 style="margin-top:25px">
+      Twoje filmy
+    </h3>
+
+    <div id="adminMovieList">
+      ${db.customMovies.length
+        ? db.customMovies.map(movie => `
+          <div
+            style="
+              padding:12px;
+              margin-top:10px;
+              border-radius:14px;
+              background:#201725;
+            ">
+
+            <strong>
+              ${escapeHTML(movie.title)}
+            </strong>
+
+            <p style="
+              color:#918899;
+              margin:5px 0 10px;
+            ">
+              ${escapeHTML(movie.category)}
+            </p>
+
+            <button
+              class="secondary"
+              data-admin-delete="${escapeHTML(movie.id)}">
+              🗑️ Usuń
+            </button>
+
+          </div>
+        `).join("")
+        : `
+          <p style="color:#918899">
+            Nie dodano jeszcze żadnych filmów.
+          </p>
+        `
+      }
+    </div>
+  `;
+
+  $("adminAddMovieButton")
+    ?.addEventListener(
+      "click",
+      openAdd
     );
 
+  panel
+    .querySelectorAll(
+      "[data-admin-delete]"
+    )
+    .forEach(button => {
+
+      button.addEventListener(
+        "click",
+        () => deleteMovie(
+          button.dataset.adminDelete
+        )
+      );
+
+    });
 }
 
 
-/* =====================================================
+/* =========================================================
+   KOMENTARZE
+   ========================================================= */
+
+function getComments(movieId) {
+  if (!Array.isArray(db.comments[movieId])) {
+    db.comments[movieId] = [];
+  }
+
+  return db.comments[movieId];
+}
+
+
+function addComment() {
+  const user = currentUser();
+
+  if (!user) {
+    toast("Zaloguj się, aby komentować.");
+    setTimeout(openLogin, 600);
+    return;
+  }
+
+  if (!currentMovie) return;
+
+  const input =
+    $("filmCommentInput");
+
+  if (!input) return;
+
+  const text =
+    input.value.trim();
+
+  if (!text) {
+    toast("Wpisz komentarz.");
+    return;
+  }
+
+  if (text.length > 500) {
+    toast(
+      "Komentarz może mieć maksymalnie 500 znaków."
+    );
+
+    return;
+  }
+
+  const comment = {
+    id: randomId("comment"),
+    userId: user.id,
+    userName: user.name,
+    text,
+    date: Date.now()
+  };
+
+  const comments =
+    getComments(currentMovie.id);
+
+  comments.push(comment);
+
+  saveDB();
+
+  input.value = "";
+
+  renderComments();
+
+  toast("Komentarz dodany 💬");
+}
+
+
+function deleteComment(commentId) {
+  const user = currentUser();
+
+  if (!user) return;
+
+  const comments =
+    getComments(currentMovie.id);
+
+  const comment =
+    comments.find(
+      item => item.id === commentId
+    );
+
+  if (!comment) return;
+
+  if (
+    comment.userId !== user.id &&
+    !isAdmin()
+  ) {
+    toast("Nie możesz usunąć tego komentarza.");
+    return;
+  }
+
+  db.comments[currentMovie.id] =
+    comments.filter(
+      item => item.id !== commentId
+    );
+
+  saveDB();
+
+  renderComments();
+
+  toast("Komentarz usunięty.");
+}
+
+
+function renderComments() {
+  if (!currentMovie) return;
+
+  let section =
+    $("commentsSection");
+
+  if (!section) {
+    section =
+      document.createElement("section");
+
+    section.id = "commentsSection";
+
+    section.style.marginTop = "35px";
+
+    $("movieScreen")
+      ?.querySelector(".screen-content")
+      ?.appendChild(section);
+  }
+
+  const comments =
+    getComments(currentMovie.id);
+
+  section.innerHTML = `
+    <h3>
+      💬 Komentarze
+    </h3>
+
+    ${
+      isLoggedIn()
+        ? `
+          <textarea
+            id="filmCommentInput"
+            maxlength="500"
+            placeholder="Napisz komentarz..."></textarea>
+
+          <button
+            class="primary full"
+            id="addCommentButton">
+            Dodaj komentarz
+          </button>
+        `
+        : `
+          <p>
+            Zaloguj się, aby dodać komentarz.
+          </p>
+        `
+    }
+
+    <div style="margin-top:20px">
+
+      ${
+        comments.length
+          ? comments
+              .slice()
+              .reverse()
+              .map(comment => {
+
+                const canDelete =
+                  isAdmin() ||
+                  currentUser()?.id ===
+                  comment.userId;
+
+                return `
+                  <div
+                    style="
+                      padding:15px;
+                      margin-bottom:10px;
+                      border-radius:16px;
+                      background:#15101d;
+                    ">
+
+                    <strong>
+                      ${escapeHTML(comment.userName)}
+                    </strong>
+
+                    <p style="
+                      margin:7px 0;
+                      color:#aaa1b4;
+                    ">
+                      ${escapeHTML(comment.text)}
+                    </p>
+
+                    <small style="
+                      color:#706878;
+                    ">
+                      ${new Date(comment.date)
+                        .toLocaleDateString("pl-PL")}
+                    </small>
+
+                    ${
+                      canDelete
+                        ? `
+                          <button
+                            data-delete-comment="${escapeHTML(comment.id)}"
+                            style="
+                              float:right;
+                              background:none;
+                              color:#b99aca;
+                            ">
+                            Usuń
+                          </button>
+                        `
+                        : ""
+                    }
+
+                  </div>
+                `;
+              })
+              .join("")
+          : `
+            <p>
+              Brak komentarzy. Bądź pierwszy!
+            </p>
+          `
+      }
+
+    </div>
+  `;
+
+  $("addCommentButton")
+    ?.addEventListener(
+      "click",
+      addComment
+    );
+
+  section
+    .querySelectorAll(
+      "[data-delete-comment]"
+    )
+    .forEach(button => {
+
+      button.addEventListener(
+        "click",
+        () => deleteComment(
+          button.dataset.deleteComment
+        )
+      );
+
+    });
+}
+
+
+/* =========================================================
+   NARZĘDZIA ADMINA PRZY FILMIE
+   ========================================================= */
+
+function renderAdminMovieTools() {
+  let tools =
+    $("adminMovieTools");
+
+  if (!isAdmin() || !currentMovie) {
+    tools?.remove();
+    return;
+  }
+
+  if (!tools) {
+    tools =
+      document.createElement("div");
+
+    tools.id = "adminMovieTools";
+
+    tools.style.marginTop = "25px";
+    tools.style.padding = "15px";
+    tools.style.borderRadius = "16px";
+    tools.style.background = "#201525";
+
+    $("movieScreen")
+      ?.querySelector(".screen-content")
+      ?.appendChild(tools);
+  }
+
+  const custom =
+    db.customMovies.some(
+      movie => movie.id === currentMovie.id
+    );
+
+  tools.innerHTML = custom
+    ? `
+      <strong>
+        👑 Tryb administratora
+      </strong>
+
+      <button
+        class="secondary full"
+        id="deleteCurrentMovieButton"
+        style="margin-top:12px">
+        🗑️ Usuń ten film
+      </button>
+    `
+    : `
+      <strong>
+        👑 Film systemowy
+      </strong>
+
+      <p style="color:#918899">
+        Tego filmu nie można usunąć.
+      </p>
+    `;
+
+  $("deleteCurrentMovieButton")
+    ?.addEventListener(
+      "click",
+      () => deleteMovie(currentMovie.id)
+    );
+}
+
+
+/* =========================================================
+   KLIKNIĘCIA W FILMY
+   ========================================================= */
+
+function setupMovieClicks() {
+  document.addEventListener(
+    "click",
+    event => {
+
+      const card =
+        event.target.closest(
+          "[data-movie-id]"
+        );
+
+      if (!card) return;
+
+      const id =
+        card.dataset.movieId;
+
+      if (id) {
+        openMovie(id);
+      }
+    }
+  );
+
+  document.addEventListener(
+    "keydown",
+    event => {
+
+      const card =
+        event.target.closest(
+          "[data-movie-id]"
+        );
+
+      if (!card) return;
+
+      if (
+        event.key === "Enter" ||
+        event.key === " "
+      ) {
+        event.preventDefault();
+
+        openMovie(
+          card.dataset.movieId
+        );
+      }
+    }
+  );
+}
+
+
+/* =========================================================
    EVENTY
-===================================================== */
+   ========================================================= */
 
 function setupEvents() {
-
-  /* PROFILE */
 
   $("profileTopButton")
     ?.addEventListener(
       "click",
-      () =>
-        showScreen(
-          profileScreen
-        )
+      openProfile
     );
 
+  $("heroWatch")
+    ?.addEventListener(
+      "click",
+      () => openMovie("action")
+    );
+
+  $("continueMore")
+    ?.addEventListener(
+      "click",
+      openLibrary
+    );
+
+  $("premiumHomeButton")
+    ?.addEventListener(
+      "click",
+      openPremium
+    );
+
+
+  /* NAV */
+
+  $("navHome")
+    ?.addEventListener(
+      "click",
+      goHome
+    );
+
+  $("navSearch")
+    ?.addEventListener(
+      "click",
+      openSearch
+    );
+
+  $("navAdd")
+    ?.addEventListener(
+      "click",
+      openAdd
+    );
+
+  $("navLibrary")
+    ?.addEventListener(
+      "click",
+      openLibrary
+    );
 
   $("navProfile")
     ?.addEventListener(
       "click",
-      () =>
-        showScreen(
-          profileScreen
-        )
+      openProfile
     );
 
 
-  $("profileLogin")
+  /* BACK */
+
+  [
+    "movieBack",
+    "loginBack",
+    "registerBack",
+    "profileBack",
+    "libraryBack",
+    "premiumBack",
+    "searchBack",
+    "addBack"
+  ].forEach(id => {
+    $(id)?.addEventListener(
+      "click",
+      closeScreen
+    );
+  });
+
+
+  /* FILM */
+
+  $("playMovieButton")
     ?.addEventListener(
       "click",
-      () =>
-        showScreen(
-          loginScreen
-        )
+      playMovie
+    );
+
+  $("favoriteButton")
+    ?.addEventListener(
+      "click",
+      toggleFavorite
     );
 
 
-  $("profileLogout")
+  /* VIDEO */
+
+  $("videoPlayer")
     ?.addEventListener(
-      "click",
-      logout
-    );
-
-
-  $("profileReset")
-    ?.addEventListener(
-      "click",
-      forgotPassword
-    );
-
-
-  $("profileLibrary")
-    ?.addEventListener(
-      "click",
-      async () => {
-
-        await renderLibrary(
-          "favorites"
-        );
-
-        showScreen(
-          libraryScreen
-        );
-
-      }
-    );
-
-
-  $("profilePremium")
-    ?.addEventListener(
-      "click",
+      "timeupdate",
       () => {
 
-        updatePremiumScreen();
-
-        showScreen(
-          premiumScreen
-        );
+        if (
+          $("videoPlayer").currentTime % 5 <
+          .5
+        ) {
+          saveProgress();
+        }
 
       }
     );
 
+  $("videoPlayer")
+    ?.addEventListener(
+      "pause",
+      saveProgress
+    );
 
-  /* LOGIN */
+  $("videoPlayer")
+    ?.addEventListener(
+      "ended",
+      () => {
+
+        if (!currentMovie) return;
+
+        const user =
+          currentUser();
+
+        if (!user) return;
+
+        if (db.progress[user.id]) {
+          delete db.progress[user.id][
+            currentMovie.id
+          ];
+        }
+
+        saveDB();
+      }
+    );
+
+
+  /* LOGOWANIE */
 
   $("loginButton")
     ?.addEventListener(
@@ -3627,16 +2274,11 @@ function setupEvents() {
       login
     );
 
-
   $("registerButton")
     ?.addEventListener(
       "click",
-      () =>
-        showScreen(
-          registerScreen
-        )
+      openRegister
     );
-
 
   $("forgotButton")
     ?.addEventListener(
@@ -3645,240 +2287,51 @@ function setupEvents() {
     );
 
 
+  /* REJESTRACJA */
+
   $("createAccountButton")
     ?.addEventListener(
       "click",
-      register
+      createAccount
     );
-
 
   $("goLoginButton")
     ?.addEventListener(
       "click",
-      () =>
-        showScreen(
-          loginScreen
-        )
+      openLogin
     );
 
 
-  /* NAV HOME */
+  /* PROFIL */
 
-  $("navHome")
+  $("profileLogin")
     ?.addEventListener(
       "click",
-      () => {
-
-        hideAllScreens();
-
-        window.scrollTo({
-          top: 0,
-          behavior: "smooth"
-        });
-
-      }
+      openLogin
     );
 
-
-  /* SEARCH */
-
-  $("navSearch")
+  $("profileLibrary")
     ?.addEventListener(
       "click",
-      () =>
-        showScreen(
-          searchScreen
-        )
+      openLibrary
     );
 
-
-  /* LIBRARY */
-
-  $("navLibrary")
+  $("profilePremium")
     ?.addEventListener(
       "click",
-      async () => {
-
-        await renderLibrary(
-          "favorites"
-        );
-
-        showScreen(
-          libraryScreen
-        );
-
-      }
+      openPremium
     );
 
-
-  /* ADMIN ADD */
-
-  $("navAdd")
+  $("profileReset")
     ?.addEventListener(
       "click",
-      () => {
-
-        if (!isAdmin()) {
-
-          toast(
-            "Tylko administrator ma dostęp."
-          );
-
-          return;
-
-        }
-
-        showScreen(
-          addScreen
-        );
-
-      }
+      forgotPassword
     );
 
-
-  /* BACK */
-
-  $("movieBack")
+  $("profileLogout")
     ?.addEventListener(
       "click",
-      () => {
-
-        saveVideoProgress();
-
-        videoPlayer?.pause();
-
-        showScreen(
-          null
-        );
-
-      }
-    );
-
-
-  $("loginBack")
-    ?.addEventListener(
-      "click",
-      () =>
-        showScreen(
-          profileScreen
-        )
-    );
-
-
-  $("registerBack")
-    ?.addEventListener(
-      "click",
-      () =>
-        showScreen(
-          loginScreen
-        )
-    );
-
-
-  $("profileBack")
-    ?.addEventListener(
-      "click",
-      () =>
-        showScreen(
-          null
-        )
-    );
-
-
-  $("libraryBack")
-    ?.addEventListener(
-      "click",
-      () =>
-        showScreen(
-          profileScreen
-        )
-    );
-
-
-  $("premiumBack")
-    ?.addEventListener(
-      "click",
-      () =>
-        showScreen(
-          profileScreen
-        )
-    );
-
-
-  $("searchBack")
-    ?.addEventListener(
-      "click",
-      () =>
-        showScreen(
-          null
-        )
-    );
-
-
-  $("addBack")
-    ?.addEventListener(
-      "click",
-      () =>
-        showScreen(
-          null
-        )
-    );
-
-
-  /* HERO */
-
-  $("heroWatch")
-    ?.addEventListener(
-      "click",
-      () => {
-
-        if (movies.length) {
-
-          openMovie(
-            movies[0].id
-          );
-
-        } else {
-
-          toast(
-            "Biblioteka jest jeszcze pusta."
-          );
-
-        }
-
-      }
-    );
-
-
-  $("continueMore")
-    ?.addEventListener(
-      "click",
-      async () => {
-
-        await renderLibrary(
-          "continue"
-        );
-
-        showScreen(
-          libraryScreen
-        );
-
-      }
-    );
-
-
-  $("premiumHomeButton")
-    ?.addEventListener(
-      "click",
-      () => {
-
-        updatePremiumScreen();
-
-        showScreen(
-          premiumScreen
-        );
-
-      }
+      logout
     );
 
 
@@ -3892,68 +2345,33 @@ function setupEvents() {
 
       button.addEventListener(
         "click",
-        () => {
-
-          filterCategory(
-            button.dataset.category
-          );
-
-        }
+        () => filterMovies(
+          button.dataset.category
+        )
       );
 
     });
 
 
-  /* RATING */
+  /* OCENY */
 
   document
     .querySelectorAll(
-      ".rating button"
+      "[data-rating]"
     )
     .forEach(button => {
 
       button.addEventListener(
         "click",
-        () => {
-
-          rateMovie(
-            button.dataset.rating
-          );
-
-        }
+        () => rateMovie(
+          Number(button.dataset.rating)
+        )
       );
 
     });
 
 
-  /* FAVORITE */
-
-  $("favoriteButton")
-    ?.addEventListener(
-      "click",
-      toggleFavorite
-    );
-
-
-  /* PLAY */
-
-  $("playMovieButton")
-    ?.addEventListener(
-      "click",
-      playMovie
-    );
-
-
-  /* SEARCH */
-
-  $("searchInput")
-    ?.addEventListener(
-      "input",
-      searchMovies
-    );
-
-
-  /* LIBRARY TABS */
+  /* BIBLIOTEKA */
 
   document
     .querySelectorAll(
@@ -3963,13 +2381,9 @@ function setupEvents() {
 
       button.addEventListener(
         "click",
-        () => {
-
-          renderLibrary(
-            button.dataset.library
-          );
-
-        }
+        () => showLibrary(
+          button.dataset.library
+        )
       );
 
     });
@@ -3985,19 +2399,16 @@ function setupEvents() {
 
       button.addEventListener(
         "click",
-        () => {
-
-          buyPlan(
-            button.dataset.buy
-          );
-
-        }
+        () => buyPlan(
+          button.dataset.buy,
+          Number(button.dataset.days)
+        )
       );
 
     });
 
 
-  /* VOUCHERY */
+  /* BONY */
 
   document
     .querySelectorAll(
@@ -4007,237 +2418,146 @@ function setupEvents() {
 
       button.addEventListener(
         "click",
-        () => {
-
-          activateVoucher(
-            button.dataset.voucher
-          );
-
-        }
+        () => activateVoucher(
+          button.dataset.voucher
+        )
       );
 
     });
 
 
-  /* POSTER */
+  /* SZUKANIE */
 
-  $("addPosterFile")
+  $("searchInput")
     ?.addEventListener(
-      "change",
-      handlePosterFile
+      "input",
+      searchMovies
     );
 
 
-  /* VIDEO */
-
-  $("addVideoFile")
-    ?.addEventListener(
-      "change",
-      handleVideoFile
-    );
-
-
-  /* ADD MOVIE */
+  /* DODAWANIE */
 
   $("addMovieButton")
     ?.addEventListener(
       "click",
       addMovie
     );
+}
 
 
-  /* KLIK FILMU */
+/* =========================================================
+   KLAWIATURA
+   ========================================================= */
 
-  document.addEventListener(
-    "click",
-    event => {
+function setupFormKeyboard() {
 
-      const target =
-        event.target.closest(
-          "[data-movie-id]"
-        );
-
-
-      if (!target) {
-        return;
-      }
-
-
-      const id =
-        target.dataset.movieId;
-
-
-      if (id) {
-
-        openMovie(
-          id
-        );
-
-      }
-
-    }
-  );
-
-
-  /* ENTER LOGIN */
-
-  [
-    $("loginEmail"),
-    $("loginPassword")
-
-  ].forEach(input => {
-
-    input?.addEventListener(
+  $("loginPassword")
+    ?.addEventListener(
       "keydown",
       event => {
 
-        if (
-          event.key ===
-          "Enter"
-        ) {
-
+        if (event.key === "Enter") {
           login();
-
         }
 
       }
     );
 
-  });
-
-
-  /* ENTER REGISTER */
 
   $("registerPassword")
     ?.addEventListener(
       "keydown",
       event => {
 
-        if (
-          event.key ===
-          "Enter"
-        ) {
-
-          register();
-
+        if (event.key === "Enter") {
+          createAccount();
         }
 
       }
     );
 
 
-  /* VIDEO EVENTS */
+  $("searchInput")
+    ?.addEventListener(
+      "keydown",
+      event => {
 
-  videoPlayer?.addEventListener(
-    "loadedmetadata",
-    loadVideoProgress
-  );
-
-
-  videoPlayer?.addEventListener(
-    "timeupdate",
-    () => {
-
-      if (
-        Math.floor(
-          videoPlayer.currentTime
-        ) % 5 === 0
-      ) {
-
-        saveVideoProgress();
+        if (event.key === "Escape") {
+          closeScreen();
+        }
 
       }
-
-    }
-  );
-
-
-  videoPlayer?.addEventListener(
-    "pause",
-    saveVideoProgress
-  );
-
-
-  videoPlayer?.addEventListener(
-    "ended",
-    saveVideoProgress
-  );
-
+    );
 }
 
 
-/* =====================================================
-   START
-===================================================== */
+/* =========================================================
+   BLOKADA ZOOMU
+   ========================================================= */
 
-async function init() {
-
-  /* DOM */
-
-  movieScreen =
-    $("movieScreen");
-
-  loginScreen =
-    $("loginScreen");
-
-  registerScreen =
-    $("registerScreen");
-
-  profileScreen =
-    $("profileScreen");
-
-  libraryScreen =
-    $("libraryScreen");
-
-  premiumScreen =
-    $("premiumScreen");
-
-  searchScreen =
-    $("searchScreen");
-
-  addScreen =
-    $("addScreen");
-
-  videoPlayer =
-    $("videoPlayer");
-
-
-  /* BAZA */
-
-  try {
-
-    await openDatabase();
-
-  } catch (error) {
-
-    console.error(
-      "IndexedDB error:",
-      error
-    );
-
-    toast(
-      "Nie udało się uruchomić pamięci filmów."
-    );
-
+document.addEventListener(
+  "dblclick",
+  event => event.preventDefault(),
+  {
+    passive: false
   }
+);
+
+document.addEventListener(
+  "gesturestart",
+  event => event.preventDefault(),
+  {
+    passive: false
+  }
+);
+
+document.addEventListener(
+  "gesturechange",
+  event => event.preventDefault(),
+  {
+    passive: false
+  }
+);
+
+document.addEventListener(
+  "gestureend",
+  event => event.preventDefault(),
+  {
+    passive: false
+  }
+);
 
 
-  /* START */
+/* =========================================================
+   START
+   ========================================================= */
 
-  startLoading();
+function initFilmApp() {
 
-  updateProfile();
-
-  await renderMovies();
+  console.log(
+    "FILMAPP uruchomiony"
+  );
 
   setupEvents();
+  setupMovieClicks();
+  setupFormKeyboard();
 
+  renderMovies();
+  updateProfile();
+  updateAdminUI();
+
+  const user = currentUser();
+
+  if (user) {
+    ensureUserData(user);
+    updatePremium();
+  }
 }
 
 
-/* =====================================================
-   START APP
-===================================================== */
+/* =========================================================
+   START APLIKACJI
+   ========================================================= */
 
 if (
   document.readyState ===
@@ -4246,11 +2566,14 @@ if (
 
   document.addEventListener(
     "DOMContentLoaded",
-    init
+    initFilmApp,
+    {
+      once: true
+    }
   );
 
 } else {
 
-  init();
+  initFilmApp();
 
 }
