@@ -12,8 +12,12 @@ body {
   margin: 0;
   background: #09060f;
   color: #fff;
-  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display",
-               "Segoe UI", sans-serif;
+  font-family:
+    -apple-system,
+    BlinkMacSystemFont,
+    "SF Pro Display",
+    "Segoe UI",
+    sans-serif;
   overflow-x: hidden;
   touch-action: manipulation;
   user-select: none;
@@ -21,7 +25,8 @@ body {
 
 button,
 input,
-textarea {
+textarea,
+select {
   font: inherit;
 }
 
@@ -33,7 +38,8 @@ button {
 }
 
 input,
-textarea {
+textarea,
+select {
   user-select: text;
 }
 
@@ -42,16 +48,203 @@ textarea {
   padding-bottom: 100px;
 }
 
+
+/* =====================================================
+   EKRAN STARTOWY
+===================================================== */
+
+#loadingScreen {
+  position: fixed;
+  inset: 0;
+  z-index: 99999;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  background:
+    radial-gradient(
+      circle at center,
+      #241239 0%,
+      #0b0710 42%,
+      #030207 100%
+    );
+
+  overflow: hidden;
+
+  transition:
+    opacity .7s ease,
+    transform .7s ease;
+}
+
+#loadingScreen.hide {
+  opacity: 0;
+  transform: scale(1.08);
+  pointer-events: none;
+}
+
+.loading-glow {
+  position: absolute;
+
+  width: 280px;
+  height: 280px;
+
+  border-radius: 50%;
+
+  background:
+    radial-gradient(
+      circle,
+      rgba(130, 72, 210, .45),
+      rgba(80, 35, 130, .12),
+      transparent 70%
+    );
+
+  filter: blur(15px);
+
+  animation:
+    loadingGlow 2.5s ease-in-out infinite;
+}
+
+@keyframes loadingGlow {
+  0%,
+  100% {
+    transform: scale(.8);
+    opacity: .4;
+  }
+
+  50% {
+    transform: scale(1.25);
+    opacity: .85;
+  }
+}
+
+.loading-logo {
+  position: relative;
+  z-index: 2;
+
+  font-size: 52px;
+  font-weight: 1000;
+  letter-spacing: 4px;
+
+  opacity: 0;
+
+  animation:
+    loadingLogo 1.5s cubic-bezier(.2,.8,.2,1)
+    .2s forwards;
+}
+
+.loading-logo span {
+  opacity: .45;
+}
+
+@keyframes loadingLogo {
+
+  0% {
+    opacity: 0;
+    transform: scale(.65);
+    letter-spacing: 13px;
+    filter: blur(10px);
+  }
+
+  60% {
+    opacity: 1;
+    transform: scale(1.08);
+    filter: blur(0);
+  }
+
+  100% {
+    opacity: 1;
+    transform: scale(1);
+    letter-spacing: 4px;
+  }
+}
+
+.loading-subtitle {
+  position: relative;
+  z-index: 2;
+
+  margin-top: 14px;
+
+  font-size: 10px;
+  letter-spacing: 4px;
+
+  color: #a99ab5;
+
+  opacity: 0;
+
+  animation:
+    fadeUp .8s ease 1s forwards;
+}
+
+.loading-line {
+  position: relative;
+  z-index: 2;
+
+  width: 150px;
+  height: 3px;
+
+  margin-top: 38px;
+
+  background: rgba(255,255,255,.12);
+
+  border-radius: 20px;
+  overflow: hidden;
+
+  opacity: 0;
+
+  animation:
+    fadeUp .6s ease 1.1s forwards;
+}
+
+#loadingProgress {
+  width: 0%;
+  height: 100%;
+
+  background: #fff;
+
+  box-shadow:
+    0 0 15px rgba(255,255,255,.8);
+
+  transition:
+    width .15s linear;
+}
+
+@keyframes fadeUp {
+
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+
+/* =====================================================
+   TOPBAR
+===================================================== */
+
 .topbar {
   height: 70px;
+
   padding: 0 20px;
+
   display: flex;
   align-items: center;
   justify-content: space-between;
+
   position: sticky;
   top: 0;
+
   z-index: 20;
-  background: rgba(9, 6, 15, .82);
+
+  background:
+    rgba(9,6,15,.82);
+
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
 }
@@ -74,10 +267,18 @@ textarea {
 .icon-btn {
   width: 43px;
   height: 43px;
+
   border-radius: 50%;
+
   background: #191222;
+
   font-size: 19px;
 }
+
+
+/* =====================================================
+   HERO
+===================================================== */
 
 main {
   padding: 0 16px;
@@ -85,10 +286,14 @@ main {
 
 .hero {
   min-height: 440px;
+
   border-radius: 28px;
+
   overflow: hidden;
+
   display: flex;
   align-items: flex-end;
+
   background:
     linear-gradient(
       180deg,
@@ -101,7 +306,9 @@ main {
       #271536 40%,
       #0b0710 80%
     );
-  box-shadow: 0 25px 70px rgba(0,0,0,.4);
+
+  box-shadow:
+    0 25px 70px rgba(0,0,0,.4);
 }
 
 .hero-content {
@@ -112,12 +319,20 @@ main {
 .badge,
 .quality {
   display: inline-block;
-  background: rgba(255,255,255,.1);
-  border: 1px solid rgba(255,255,255,.13);
+
+  background:
+    rgba(255,255,255,.1);
+
+  border:
+    1px solid rgba(255,255,255,.13);
+
   padding: 7px 10px;
+
   border-radius: 10px;
+
   font-size: 11px;
   font-weight: 800;
+
   letter-spacing: .7px;
 }
 
@@ -132,13 +347,24 @@ main {
   line-height: 1.5;
 }
 
+
+/* =====================================================
+   BUTTONS
+===================================================== */
+
 .primary,
 .secondary {
   min-height: 48px;
+
   padding: 0 20px;
+
   border-radius: 15px;
+
   font-weight: 800;
-  transition: transform .2s ease, opacity .2s ease;
+
+  transition:
+    transform .2s ease,
+    opacity .2s ease;
 }
 
 .primary {
@@ -162,6 +388,11 @@ main {
   width: 100%;
 }
 
+
+/* =====================================================
+   SEKCJE
+===================================================== */
+
 section {
   margin-top: 34px;
 }
@@ -170,6 +401,7 @@ section {
   display: flex;
   justify-content: space-between;
   align-items: center;
+
   margin-bottom: 14px;
 }
 
@@ -184,11 +416,19 @@ section {
   font-size: 13px;
 }
 
+
+/* =====================================================
+   FILMY
+===================================================== */
+
 .movie-row {
   display: flex;
   gap: 14px;
+
   overflow-x: auto;
+
   padding-bottom: 8px;
+
   scrollbar-width: none;
 }
 
@@ -204,73 +444,110 @@ section {
 
 .poster {
   height: 215px;
+
   border-radius: 18px;
+
   overflow: hidden;
+
   position: relative;
+
   display: flex;
   align-items: center;
   justify-content: center;
+
+  background:
+    linear-gradient(
+      145deg,
+      #24182f,
+      #55347a,
+      #0d0910
+    );
+
   background-size: cover;
   background-position: center;
-  box-shadow: 0 10px 25px rgba(0,0,0,.3);
+
+  box-shadow:
+    0 10px 25px rgba(0,0,0,.3);
 }
 
-.poster1 {
-  background:
-    linear-gradient(145deg,#3d1557,#b45c7a,#0d0910);
-}
+.poster::after {
+  content: "";
 
-.poster2 {
-  background:
-    linear-gradient(145deg,#07151f,#593365,#070509);
-}
+  position: absolute;
+  inset: 0;
 
-.poster3 {
   background:
-    linear-gradient(145deg,#642613,#b56b30,#0b0705);
-}
-
-.poster4 {
-  background:
-    linear-gradient(145deg,#142d3c,#287b8d,#071014);
-}
-
-.poster5 {
-  background:
-    linear-gradient(145deg,#30206b,#8a50b9,#0c0711);
-}
-
-.poster6 {
-  background:
-    linear-gradient(145deg,#2b3011,#8a8f31,#0a0b06);
+    linear-gradient(
+      180deg,
+      rgba(0,0,0,.15),
+      rgba(0,0,0,.5)
+    );
 }
 
 .poster-title {
+  position: relative;
+  z-index: 2;
+
   font-size: 18px;
   font-weight: 900;
+
   text-align: center;
+
   padding: 10px;
-  text-shadow: 0 3px 10px #000;
+
+  text-shadow:
+    0 3px 10px #000;
 }
 
 .quality {
   position: absolute;
+
+  z-index: 4;
+
   top: 9px;
   right: 9px;
+
   padding: 5px 7px;
+}
+
+.access-card {
+  position: absolute;
+
+  z-index: 4;
+
+  top: 9px;
+  left: 9px;
+
+  padding: 5px 7px;
+
+  border-radius: 8px;
+
+  font-size: 9px;
+  font-weight: 900;
+
+  background: rgba(0,0,0,.7);
 }
 
 .play {
   position: absolute;
+
+  z-index: 5;
+
   width: 45px;
   height: 45px;
+
   border-radius: 50%;
+
   display: grid;
   place-items: center;
+
   background: rgba(255,255,255,.9);
   color: #111;
+
   opacity: 0;
+
   transform: scale(.8);
+
   transition: .25s ease;
 }
 
@@ -291,27 +568,54 @@ section {
   font-size: 12px;
 }
 
+
+/* =====================================================
+   KATEGORIE
+===================================================== */
+
 .categories {
   display: flex;
   gap: 9px;
+
   overflow-x: auto;
+
   padding-bottom: 5px;
 }
 
 .categories button {
   white-space: nowrap;
+
   padding: 13px 15px;
+
   border-radius: 14px;
+
   background: #171020;
+
   color: #d5cddd;
-  transition: transform .2s ease;
+
+  transition:
+    transform .2s ease;
 }
+
+
+/* =====================================================
+   PREMIUM CARD
+===================================================== */
 
 .premium-card {
   padding: 25px;
+
   border-radius: 25px;
-  background: linear-gradient(145deg,#28163d,#110b19);
-  border: 1px solid rgba(255,255,255,.08);
+
+  background:
+    linear-gradient(
+      145deg,
+      #28163d,
+      #110b19
+    );
+
+  border:
+    1px solid rgba(255,255,255,.08);
 }
 
 .premium-card h2 {
@@ -323,33 +627,61 @@ section {
   line-height: 1.5;
 }
 
+
+/* =====================================================
+   NAV
+===================================================== */
+
 .bottom-nav {
   position: fixed;
+
   left: 10px;
   right: 10px;
-  bottom: calc(10px + env(safe-area-inset-bottom));
+
+  bottom:
+    calc(
+      10px +
+      env(safe-area-inset-bottom)
+    );
+
   height: 67px;
+
   z-index: 100;
+
   display: flex;
+
   align-items: center;
   justify-content: space-around;
-  background: rgba(20,14,29,.93);
-  border: 1px solid rgba(255,255,255,.08);
+
+  background:
+    rgba(20,14,29,.93);
+
+  border:
+    1px solid rgba(255,255,255,.08);
+
   border-radius: 23px;
+
   backdrop-filter: blur(22px);
   -webkit-backdrop-filter: blur(22px);
 }
 
 .nav {
   background: transparent;
+
   color: #77707f;
+
   display: flex;
   flex-direction: column;
   align-items: center;
+
   gap: 3px;
+
   min-width: 50px;
+
   font-size: 19px;
-  transition: transform .2s ease;
+
+  transition:
+    transform .2s ease;
 }
 
 .nav small {
@@ -363,19 +695,34 @@ section {
 .nav.add {
   width: 48px;
   height: 48px;
+
   border-radius: 17px;
+
   background: #fff;
   color: #0b0710;
+
   font-size: 27px;
 }
 
+
+/* =====================================================
+   EKRANY
+===================================================== */
+
 .screen {
   position: fixed;
+
   inset: 0;
+
   z-index: 200;
+
   overflow-y: auto;
+
   background: #09060f;
-  animation: screenIn .3s ease;
+
+  animation:
+    screenIn .3s ease;
+
   padding-bottom: 40px;
 }
 
@@ -384,6 +731,7 @@ section {
 }
 
 @keyframes screenIn {
+
   from {
     opacity: 0;
     transform: translateY(20px);
@@ -397,23 +745,40 @@ section {
 
 .back {
   position: fixed;
+
   top: 18px;
   left: 18px;
+
   z-index: 10;
+
   width: 44px;
   height: 44px;
+
   border-radius: 50%;
-  background: rgba(20,15,28,.85);
+
+  background:
+    rgba(20,15,28,.85);
+
   backdrop-filter: blur(15px);
   -webkit-backdrop-filter: blur(15px);
+
   font-size: 32px;
 }
 
+
+/* =====================================================
+   VIDEO
+===================================================== */
+
 .video-player {
   width: 100%;
-  aspect-ratio: 16 / 9;
+
+  aspect-ratio: 16/9;
+
   background: #050408;
+
   display: flex;
+
   align-items: center;
   justify-content: center;
 }
@@ -421,23 +786,32 @@ section {
 .video-player video {
   width: 100%;
   height: 100%;
+
   object-fit: contain;
 }
 
 .screen-content {
-  padding: 25px 18px 60px;
+  padding:
+    25px
+    18px
+    60px;
 }
 
 .movie-meta {
   display: flex;
+
   gap: 9px;
+
   color: #aaa1b4;
+
   font-size: 13px;
 }
 
 .movie-meta span {
   background: #17101e;
+
   padding: 7px 9px;
+
   border-radius: 9px;
 }
 
@@ -463,23 +837,64 @@ section {
   flex: 1;
 }
 
+
+/* =====================================================
+   DOSTĘP
+===================================================== */
+
+.access-badge {
+  display: inline-block;
+
+  margin-top: 14px;
+
+  padding: 8px 12px;
+
+  border-radius: 10px;
+
+  background: #191220;
+
+  color: #ddd;
+
+  font-size: 11px;
+  font-weight: 900;
+}
+
+
+/* =====================================================
+   OCENY
+===================================================== */
+
 .rating {
   display: flex;
+
   gap: 5px;
+
   flex-wrap: wrap;
 }
 
 .rating button {
   width: 39px;
   height: 39px;
+
   border-radius: 10px;
+
   background: #191220;
 }
 
+
+/* =====================================================
+   LOGOWANIE
+===================================================== */
+
 .auth,
 .profile {
-  padding: 100px 22px 40px;
+  padding:
+    100px
+    22px
+    40px;
+
   max-width: 500px;
+
   margin: auto;
 }
 
@@ -495,16 +910,30 @@ section {
 
 .auth input,
 .screen-content input,
-.screen-content textarea {
+.screen-content textarea,
+.screen-content select {
   display: block;
+
   width: 100%;
-  border: 1px solid #281e33;
+
+  border:
+    1px solid #281e33;
+
   background: #14101a;
+
   color: #fff;
+
   padding: 16px;
+
   border-radius: 14px;
+
   outline: none;
+
   margin-bottom: 12px;
+}
+
+.screen-content select {
+  appearance: auto;
 }
 
 textarea {
@@ -514,26 +943,43 @@ textarea {
 
 .auth input:focus,
 .screen-content input:focus,
-.screen-content textarea:focus {
+.screen-content textarea:focus,
+.screen-content select:focus {
   border-color: #7650a1;
 }
 
 .text-btn {
   display: block;
+
   margin: 17px auto;
+
   background: transparent;
+
   color: #aa91c7;
 }
+
+
+/* =====================================================
+   PROFIL
+===================================================== */
 
 .avatar {
   width: 100px;
   height: 100px;
+
   border-radius: 50%;
+
   background: #20152c;
+
   display: grid;
   place-items: center;
+
   font-size: 43px;
-  margin: 0 auto 20px;
+
+  margin:
+    0
+    auto
+    20px;
 }
 
 .profile {
@@ -542,42 +988,113 @@ textarea {
 
 .profile-menu {
   display: grid;
+
   gap: 10px;
+
   margin-top: 30px;
 }
 
 .profile-menu button {
   padding: 17px;
+
   border-radius: 15px;
+
   background: #15101d;
+
   text-align: left;
 }
 
+
+/* =====================================================
+   BIBLIOTEKA
+===================================================== */
+
 .library-tabs {
   display: flex;
+
   gap: 8px;
+
   overflow-x: auto;
+
   margin: 25px 0;
 }
 
 .library-tabs button {
   white-space: nowrap;
+
   padding: 12px 14px;
+
   border-radius: 12px;
+
   background: #18111f;
 }
 
+.library-item {
+  display: flex;
+
+  gap: 13px;
+
+  padding: 12px;
+
+  margin-bottom: 10px;
+
+  border-radius: 16px;
+
+  background: #15101d;
+}
+
+.library-item .mini-poster {
+  width: 65px;
+  height: 85px;
+
+  border-radius: 11px;
+
+  flex-shrink: 0;
+
+  background:
+    linear-gradient(
+      145deg,
+      #3d1557,
+      #7144c8,
+      #0d0910
+    );
+
+  background-size: cover;
+  background-position: center;
+}
+
+.library-item h3 {
+  margin: 5px 0;
+}
+
+.library-item p {
+  margin: 0;
+
+  font-size: 12px;
+}
+
+
+/* =====================================================
+   PREMIUM
+===================================================== */
+
 .plans {
   display: grid;
+
   gap: 14px;
+
   margin-top: 25px;
 }
 
 .plan {
   padding: 22px;
+
   border-radius: 20px;
+
   background: #15101c;
-  border: 1px solid #241b2c;
+
+  border:
+    1px solid #241b2c;
 }
 
 .plan h2 {
@@ -590,7 +1107,9 @@ textarea {
 
 .plan strong {
   display: block;
+
   font-size: 22px;
+
   margin: 18px 0;
 }
 
@@ -600,7 +1119,9 @@ textarea {
 
 .voucher {
   display: flex;
+
   gap: 7px;
+
   margin-top: 15px;
 }
 
@@ -610,16 +1131,26 @@ textarea {
 
 .voucher button {
   padding: 0 14px;
+
   border-radius: 13px;
+
   background: #24182f;
 }
 
-.voucher-info {
-  padding: 20px;
-  margin-top: 18px;
-  border-radius: 18px;
-  background: #130e19;
+.plan-status {
+  padding: 16px;
+
+  border-radius: 16px;
+
+  background: #1b1325;
+
+  margin: 15px 0;
 }
+
+
+/* =====================================================
+   SZUKANIE
+===================================================== */
 
 .search-input {
   margin-top: 20px !important;
@@ -627,77 +1158,173 @@ textarea {
 
 .result {
   padding: 17px;
+
   margin-top: 10px;
+
   border-radius: 16px;
+
   background: #15101d;
 }
 
-.library-item {
-  display: flex;
-  gap: 13px;
-  padding: 12px;
-  margin-bottom: 10px;
-  border-radius: 16px;
-  background: #15101d;
-}
 
-.library-item .mini-poster {
-  width: 65px;
-  height: 85px;
-  border-radius: 11px;
-  flex-shrink: 0;
-}
-
-.library-item h3 {
-  margin: 5px 0;
-}
-
-.library-item p {
-  margin: 0;
-  font-size: 12px;
-}
+/* =====================================================
+   PUSTE
+===================================================== */
 
 .empty-library {
   text-align: center;
+
   color: #81798b;
-  margin-top: 70px;
+
+  margin:
+    35px
+    20px;
+
+  min-width: 220px;
 }
 
 .empty-library div {
   font-size: 65px;
 }
 
-.plan-status {
-  padding: 16px;
-  border-radius: 16px;
-  background: #1b1325;
-  margin: 15px 0;
+
+/* =====================================================
+   DODAWANIE FILMU
+===================================================== */
+
+.form-label {
+  display: block;
+
+  margin:
+    17px
+    0
+    8px;
+
+  color: #b7a9c4;
+
+  font-size: 13px;
+  font-weight: 800;
 }
+
+.file-button {
+  display: flex;
+
+  align-items: center;
+  justify-content: center;
+
+  min-height: 58px;
+
+  margin-bottom: 12px;
+
+  padding: 15px;
+
+  border-radius: 15px;
+
+  background:
+    linear-gradient(
+      135deg,
+      #21152d,
+      #17101e
+    );
+
+  border:
+    1px dashed #7650a1;
+
+  color: #e9e1ef;
+
+  font-weight: 800;
+
+  text-align: center;
+}
+
+.file-button input {
+  display: none;
+}
+
+.file-name {
+  margin:
+    -3px
+    0
+    15px;
+
+  color: #918899;
+
+  font-size: 12px;
+
+  word-break: break-word;
+}
+
+.poster-preview {
+  width: 130px;
+  height: 185px;
+
+  margin:
+    5px
+    0
+    18px;
+
+  border-radius: 16px;
+
+  background-size: cover;
+  background-position: center;
+
+  box-shadow:
+    0 10px 30px rgba(0,0,0,.4);
+}
+
+.add-film-button {
+  margin-top: 20px;
+}
+
+
+/* =====================================================
+   TOAST
+===================================================== */
 
 #toast {
   position: fixed;
+
   left: 20px;
   right: 20px;
+
   bottom: 95px;
+
   z-index: 500;
+
   padding: 15px 17px;
+
   border-radius: 15px;
+
   background: #fff;
+
   color: #0b0710;
+
   font-weight: 700;
+
   text-align: center;
+
   transform: translateY(30px);
+
   opacity: 0;
+
   pointer-events: none;
+
   transition: .3s ease;
 }
 
 #toast.show {
   opacity: 1;
+
   transform: translateY(0);
 }
 
+
+/* =====================================================
+   RESPONSIVE
+===================================================== */
+
 @media (min-width: 700px) {
+
   main {
     max-width: 1100px;
     margin: auto;
@@ -710,4 +1337,9 @@ textarea {
   .poster {
     height: 270px;
   }
+
+  .loading-logo {
+    font-size: 70px;
+  }
+
 }
